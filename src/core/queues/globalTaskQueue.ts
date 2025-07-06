@@ -212,6 +212,17 @@ class GlobalTaskQueue {
     }
 
     /**
+     * Retrieves a frozen copy of the current task queue statistics.
+     * 
+     * @returns A frozen record containing the current task queue statistics.
+     * @since v1.0.0
+     */
+    get stats() {
+        const cloned = atomix.dataTypes.object.smartClone(this.#_stats);
+        return atomix.dataTypes.record.deepFreeze(cloned);
+    }
+
+    /**
      * Generates and returns a unique task identifier.
      * Utilizes an internal helper to ensure that the ID is not already in use.
      * 

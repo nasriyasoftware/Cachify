@@ -1,0 +1,60 @@
+{
+  "name": "@nasriya/cachify",
+  "version": "0.0.1",
+  "description": "A lightweight, extensible in-memory caching library for storing anything, with built-in TTL and customizable cache types.",
+  "keywords": [],
+  "type": "module",
+  "main": "./dist/cjs/cachify.js",
+  "module": "./dist/esm/cachify.js",
+  "types": "./dist/@types/cachify.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/cachify.js",
+      "require": "./dist/cjs/cachify.js",
+      "types": "./dist/@types/cachify.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && postbuild",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "postbuild-init": "postbuild-init",
+    "test": "jest --detectOpenHandles"
+  },
+  "maintainers": [
+    {
+      "name": "Ahmad Nasriya",
+      "email": "ahmad@nasriya.net",
+      "url": "https://www.linkedin.com/in/ahmadnasriya/"
+    }
+  ],
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/nasriyasoftware/Cachify"
+  },
+  "bugs": {
+    "url": "https://github.com/nasriyasoftware/Cachify/issues"
+  },
+  "homepage": "https://package.nasriya.net/Cachify",
+  "funding": {
+    "type": "individual",
+    "url": "https://fund.nasriya.net/"
+  },
+  "license": "NOL-1",
+  "author": "Nasriya Software",
+  "devDependencies": {
+    "@nasriya/postbuild": "^1.1.5",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.10",
+    "jest": "^30.0.4",
+    "ts-jest": "^29.4.0"
+  },
+  "dependencies": {
+    "@nasriya/atomix": "^1.0.1",
+    "@nasriya/cron": "^1.1.2",
+    "@nasriya/overwatch": "^1.1.4"
+  }
+}

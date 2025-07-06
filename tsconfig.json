@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {        
+        "target": "ES2024",
+        "moduleResolution": "node",
+        "rootDir": "./src",
+        "declaration": true,
+        "declarationDir": "./dist/@types",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

@@ -55,6 +55,7 @@
   "dependencies": {
     "@nasriya/atomix": "^1.0.1",
     "@nasriya/cron": "^1.1.2",
-    "@nasriya/overwatch": "^1.1.4"
+    "@nasriya/overwatch": "^1.1.4",
+    "@nasriya/uuidx": "^1.0.3"
   }
 }

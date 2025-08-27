@@ -24,3 +24,4 @@ logs*/
 *.log
 
 # Misc
+**.env

@@ -110,4 +110,4 @@ const utils = {
     }
 }
 
-await benchmark();
+export default benchmark;

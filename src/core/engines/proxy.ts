@@ -96,7 +96,7 @@ class EngineProxy {
      * The error contains a summary of which engines failed and why.
      * @returns {Promise<void>} A promise that resolves when the value is set or rejects with an error if any engine fails.
      */
-    async set(record: CacheRecord, value: any): Promise<void> {
+    async set(record: CacheRecord, value: unknown): Promise<void> {
         const setPromises: Promise<any>[] = [];
         for (const engineName of record.engines) {
             const engine = enginesManager.getEngine(engineName)!;

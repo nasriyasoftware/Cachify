@@ -14,7 +14,7 @@ export class KVEventsManager {
         eventsEmitter.on('*', (event) => {
             if (cachify.debug) {
                 console.group(event.type || 'Unknown', 'Event');
-                console.debug(event, { colors: true, depth: 10 });
+                console.debug(event, { colors: true, depth: Infinity });
                 console.groupEnd();
             }
         })
@@ -28,7 +28,6 @@ export class KVEventsManager {
      */
     async #_emit<E extends KVCacheEvent>(event: E, payload: KVCacheEvents[E]['payload']): Promise<void> {
         this.#_eventEmitter.emit(event, payload);
-        // this.#_eventEmitter.emit('*', payload);
     }
 
     /**

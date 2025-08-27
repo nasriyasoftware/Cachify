@@ -89,7 +89,8 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
         consoleX.timeEnd(`create_get_file_${state}_promises`);
 
         consoleX.time({ id: `execute_get_file_${state}_promises`, title: `${TAG} Reading files...`, tag: 'GET' });
-        results.tests[`${state}_read`] = await Promise.allSettled(getPromises);
+        const res = await Promise.allSettled(getPromises);
+        results.tests[`${state}_read`] = res;
         consoleX.timeEnd(`execute_get_file_${state}_promises`);
     }
 

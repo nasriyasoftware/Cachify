@@ -14,7 +14,7 @@ export class FileEventsManager {
         eventsEmitter.on('*', (event) => {
             if (cachify.debug) {
                 console.group(event.type || 'Unknown', 'Event');
-                console.dir(event, { colors: true, depth: 10 });
+                console.dir(event, { colors: true, depth: Infinity });
                 console.groupEnd();
             }
         })
@@ -30,7 +30,6 @@ export class FileEventsManager {
      */
     async #_emit<E extends FileCacheEvent>(event: E, payload: FileCacheEvents[E]['payload']): Promise<void> {
         this.#_eventEmitter.emit(event, payload);
-        this.#_eventEmitter.emit('*', payload);
     }
 
     /**
@@ -134,7 +133,6 @@ export class FileEventsManager {
          * @since v1.0.0
          */
         remove: async (record: FileCacheRecord, options: { reason: FileRemovalReason } = { reason: 'manual' }) => {
-            console.trace({record, options});
             const removalReason: FileRemovalReason = options?.reason || 'manual';
             const payload: FileRemoveEvent = { item: record.toJSON(), flavor: record.flavor, type: 'remove', reason: removalReason };
             await this.#_emit('remove', payload);

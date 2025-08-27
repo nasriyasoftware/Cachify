@@ -43,15 +43,28 @@ function createRedisEngine(name: string, client: RedisClientType, options?: { pr
         return enginesManager.defineEngine(name, {
             onSet: async (record, value) => {
                 await connect();
-                const buffer = atomix.http.bodyCodec.encode(value);
-                await client.set(getKey(record), buffer);
+
+                const key = getKey(record);
+                if (record.flavor === 'files' && Buffer.isBuffer(value)) {
+                    await client.set(key, value);
+                } else {
+                    const buffer = atomix.http.bodyCodec.encode(value);
+                    await client.set(key, buffer);
+                }
             },
             onRead: async (record) => {
                 await connect();
-                const stringifiedBuffer = await client.get(getKey(record));
-                if (stringifiedBuffer === null) { return undefined; }
-                const buffer = Buffer.from(stringifiedBuffer, 'utf-8');
-                return atomix.http.bodyCodec.decode(buffer);
+                const key = getKey(record);
+
+                if (record.flavor === 'files') {
+                    const buffer = await client.sendCommand<Buffer>(['GET', key]);
+                    return buffer === null ? undefined : buffer;
+                } else {
+                    const stringifiedBuffer = await client.get(getKey(record));
+                    if (stringifiedBuffer === null) { return undefined; }
+                    const buffer = Buffer.from(stringifiedBuffer, 'utf-8');
+                    return atomix.http.bodyCodec.decode(buffer);
+                }
             },
             onRemove: async (record) => {
                 await connect();

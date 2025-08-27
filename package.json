@@ -23,7 +23,7 @@
     "build:cjs": "tsc --project tsconfig.cjs.json",
     "test": "jest --detectOpenHandles",
     "upgrade": "ncu -u --dep dev,peer",
-    "benchmark:ts": "bun run benchmarks/TS/main.ts"
+    "benchmark": "node benchmarks/index.mjs"
   },
   "maintainers": [
     {
@@ -47,12 +47,12 @@
   "license": "NOL-1",
   "author": "Nasriya Software",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.873.0",
+    "@aws-sdk/client-s3": "^3.876.0",
     "@nasriya/postbuild": "^1.1.5",
     "@redis/client": "^5.8.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.3.0",
-    "jest": "^30.0.5",
+    "jest": "^30.1.0",
     "ts-jest": "^29.4.1"
   },
   "dependencies": {
@@ -63,7 +63,7 @@
   },
   "peerDependencies": {
     "@redis/client": "^5.8.2",
-    "@aws-sdk/client-s3": "^3.873.0"
+    "@aws-sdk/client-s3": "^3.876.0"
   },
   "peerDependenciesMeta": {
     "@redis/client": {

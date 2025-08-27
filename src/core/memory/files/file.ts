@@ -11,6 +11,7 @@ import engineProxy from "../../engines/proxy";
 import fs from 'fs';
 import path from 'path';
 import { FileCacheReadResponse, FileSetConfigs } from "./docs";
+import { CachePreloadInitiator } from "../../docs/docs";
 
 class FileCacheRecord {
     readonly #_flavor: 'files' = 'files';
@@ -54,8 +55,10 @@ class FileCacheRecord {
         watcher: {
             task: null as unknown as Watcher,
             systemHandlers: {
-                onUpdate: async () => {
-                    await this.refresh();
+                onUpdate: async (event: unknown) => {
+                    if (this.isContentCached) {
+                        await this.refresh();
+                    }
                 },
                 onRemove: async () => {
                     await fileEventsManager.emit.remove(this, { reason: 'file.delete' });
@@ -185,19 +188,21 @@ class FileCacheRecord {
 
     /**
      * Initializes the file cache record.
-     * If the record is already initialized, does nothing.
-     * 
-     * This method is only intended to be called internally upon initialization.
-     * @param preload - Whether to preload the file content.
-     * @private
+     * If the record is already initialized, this method does nothing.
+     * Otherwise, it updates the file stats, watches the file for changes, refreshes the TTL, and emits a `create` event.
+     * @param preload - Whether to preload the record upon creation.
+     * @param initiator - The preload initiator, if the record is preloaded.
      */
-    async _init(preload: boolean) {
+    _init(preload: false): Promise<void>;
+    _init(preload: true, initiator: CachePreloadInitiator): Promise<void>;
+    async _init(preload: boolean, initiator?: CachePreloadInitiator): Promise<void> {
         try {
             if (this.#_initialized) { return }
             await this.#_helpers.updateFileStats();
             await this.#_helpers.watch();
             this.#_helpers.refreshTTL();
             await fileEventsManager.emit.create(this, { preload });
+            if (initiator === 'warmup') { await this.#_helpers.loadContent() }
         } catch (error) {
             throw error;
         } finally {

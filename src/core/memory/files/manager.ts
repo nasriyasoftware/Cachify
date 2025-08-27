@@ -15,7 +15,7 @@ import engineProxy from "../../engines/proxy";
 import filesHelpers from "./helpers";
 import { BlockingFlags, BlockingProcess, CacheFlavor } from "../../docs/docs";
 import { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
-import { FileKeyOptions, FileOptions, FilePathOptions, FileSetConfigs, FileSetOptions } from "./docs";
+import { FileKeyOptions, FileOptions, FilePathOptions, FilePreloadSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
 
 class FileCacheManager {
     readonly #_files: FilesMainRecord = new Map();
@@ -307,7 +307,15 @@ class FileCacheManager {
             if (configs.storeIn.length === 0) { configs.storeIn.push('memory') }
             const file = new FileCacheRecord(filePath, configs);
             scopeMap.set(configs.key, file);
-            await file._init(configs.preload);
+
+            const preload = configs.preload;
+            const initiator = preload === true ? (options as FilePreloadSetOptions)!.initiator : undefined;
+
+            if (preload) {
+                await file._init(true, initiator!);
+            } else {
+                await file._init(false);
+            }
         } catch (error) {
             if (error instanceof TypeError) {
                 error.message = `Unable to create a file record: ${error.message}`

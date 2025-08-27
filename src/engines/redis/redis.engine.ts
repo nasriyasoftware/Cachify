@@ -46,6 +46,7 @@ function createRedisEngine(name: string, client: RedisClientType, options?: { pr
 
                 const key = getKey(record);
                 if (record.flavor === 'files' && Buffer.isBuffer(value)) {
+                    console.info(`[INFO] Storing binary content for file "${key}:${record.file.path}"`);
                     await client.set(key, value);
                 } else {
                     const buffer = atomix.http.bodyCodec.encode(value);
@@ -60,7 +61,7 @@ function createRedisEngine(name: string, client: RedisClientType, options?: { pr
                     const buffer = await client.sendCommand<Buffer>(['GET', key]);
                     return buffer === null ? undefined : buffer;
                 } else {
-                    const stringifiedBuffer = await client.get(getKey(record));
+                    const stringifiedBuffer = await client.get(key);
                     if (stringifiedBuffer === null) { return undefined; }
                     const buffer = Buffer.from(stringifiedBuffer, 'utf-8');
                     return atomix.http.bodyCodec.decode(buffer);

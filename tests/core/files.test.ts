@@ -11,6 +11,8 @@ const testDir = path.join(os.tmpdir(), "nasriya", "cachify");
 // cachify.debug = true;
 
 describe("Files Cache Manager Integration", () => {
+    let originalDetectionInterval = overwatch.detectionInterval;
+
     const filesPaths = {
         test: path.join(testDir, 'testfile.txt'),
         smallFile: path.join(testDir, 'small-text.txt'),
@@ -18,27 +20,27 @@ describe("Files Cache Manager Integration", () => {
     }
 
     beforeAll(async () => {
+        overwatch.control.pause();
+        overwatch.detectionInterval = 200;
+
         // Create a temp directory for tests
         await fs.mkdir(testDir, { recursive: true });
         await Promise.all([
             fs.writeFile(filesPaths.smallFile, "a".repeat(1024 * 1024)), // 1 MB
             fs.writeFile(filesPaths.largeFile, "b".repeat(1024 * 1024 * 2)), // 2 MB
+            fs.writeFile(filesPaths.test, "Hello, world!")
         ]);
-       
+
         overwatch.control.resume();
     });
 
     afterAll(async () => {
+        overwatch.detectionInterval = originalDetectionInterval;
         // Clean up temp directory
         await Promise.all([
             fs.rm(testDir, { recursive: true, force: true }),
             cleanup()
-        ])
-    });
-
-    beforeEach(async () => {
-        // Create a test file with some content before each test       
-        await fs.writeFile(filesPaths.test, "Hello, world!");
+        ]);
     });
 
     afterEach(async () => {
@@ -53,34 +55,30 @@ describe("Files Cache Manager Integration", () => {
 
         // Add small file (will fit)
         await cachify.files.set(filesPaths.smallFile, { preload: true, initiator: 'warmup' });
-        await cachify.files.read({ filePath: filesPaths.smallFile });
 
         // Add large file (exceeds memory size, should trigger eviction)
         await cachify.files.set(filesPaths.largeFile, { preload: true, initiator: 'warmup' });
-        await cachify.files.read({ filePath: filesPaths.largeFile });
 
         const record = cachify.files.inspect({ filePath: filesPaths.smallFile });
-
         expect(record?.file.isCached).toBe(false); // evicted from memory
     });
 
     it("should expire file record after TTL", async () => {
         cachify.files.configs.ttl.enabled = true;
-        cachify.files.configs.ttl.value = 300; // 300ms TTL
+        cachify.files.configs.ttl.value = 100; // 100ms TTL
         cachify.files.configs.ttl.policy = "evict";
 
         await cachify.files.set(filesPaths.smallFile, { preload: true, initiator: 'warmup' });
-        await cachify.files.read({ filePath: filesPaths.smallFile });
 
         // Wait for TTL to expire
-        await new Promise(res => setTimeout(res, 400));
+        await new Promise(res => setTimeout(res, 150));
 
         const record = cachify.files.inspect({ filePath: filesPaths.smallFile });
         expect(record).toBeUndefined(); // Evicted due to TTL
     });
 
     it("should set and preload a file cache record", async () => {
-        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup' });
+        await cachify.files.set(filesPaths.test);
         const record = cachify.files.inspect({ filePath: filesPaths.test });
 
         expect(record).toBeDefined();
@@ -89,7 +87,7 @@ describe("Files Cache Manager Integration", () => {
     });
 
     it("should read cached content with a miss status on first read", async () => {
-        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup' });
+        await cachify.files.set(filesPaths.test);
         const readResult = await cachify.files.read({ filePath: filesPaths.test });
         expect(readResult).toBeDefined();
         expect(readResult?.status).toBe("miss"); // because it reads from disk
@@ -107,8 +105,15 @@ describe("Files Cache Manager Integration", () => {
         expect(secondRead?.content.toString()).toBe("Hello, world!");
     });
 
+    it('should return hit on the first read when created with "warmup" preload initiator', async () => {
+        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup' });
+
+        const response = await cachify.files.read({ filePath: filesPaths.test });
+        expect(response?.status).toBe("hit");
+        expect(response?.content.toString()).toBe("Hello, world!");
+    })
+
     it("should return miss status and load content on first read", async () => {
-        // Set without preload
         await cachify.files.set(filesPaths.test, { preload: false });
         const key = Buffer.from(filesPaths.test).toString("base64");
 
@@ -120,7 +125,7 @@ describe("Files Cache Manager Integration", () => {
 
     it("should detect removal from cache", async () => {
         await cachify.files.set(filesPaths.test);
-        const key = Buffer.from(filesPaths.test).toString("base64");
+        const key = atomix.http.btoa(filesPaths.test);
 
         expect(cachify.files.has({ key })).toBe(true);
         const removed = await cachify.files.remove({ key });
@@ -137,17 +142,17 @@ describe("Files Cache Manager Integration", () => {
         expect(cachify.files.size).toBe(0);
     });
 
-    it("should update content after file change", async () => {
-        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup' });
+    it("should update content (if it's already cached) after file change", async () => {
+        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup', ttl: { value: 10000, flavor: 'files' } });
 
         // Modify the file contents on disk
         await fs.writeFile(filesPaths.test, "Updated content");
 
         // Wait some time for watcher/refresh to pick up change (adjust as needed)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 220));
 
         // Read again and verify updated content
         const readResult = await cachify.files.read({ filePath: filesPaths.test });
-        expect(readResult?.content.toString()).toBe("Updated content");
+        expect(readResult!.content.toString()).toBe("Updated content");
     });
 });

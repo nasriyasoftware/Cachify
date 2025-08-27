@@ -1,0 +1,1 @@
+export type CacheStatusChangeHandler = (cache: 'ttl' | 'eviction' | 'idle', status: 'enabled' | 'disabled') => void;

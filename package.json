@@ -21,8 +21,9 @@
     "build": "npm run build:esm && npm run build:cjs && postbuild",
     "build:esm": "tsc --project tsconfig.esm.json",
     "build:cjs": "tsc --project tsconfig.cjs.json",
-    "postbuild-init": "postbuild-init",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "upgrade": "ncu -u --dep dev,peer",
+    "benchmark:ts": "bun run benchmarks/TS/main.ts"
   },
   "maintainers": [
     {
@@ -46,16 +47,30 @@
   "license": "NOL-1",
   "author": "Nasriya Software",
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.873.0",
     "@nasriya/postbuild": "^1.1.5",
+    "@redis/client": "^5.8.2",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.10",
-    "jest": "^30.0.4",
-    "ts-jest": "^29.4.0"
+    "@types/node": "^24.3.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1"
   },
   "dependencies": {
-    "@nasriya/atomix": "^1.0.1",
+    "@nasriya/atomix": "^1.0.23",
     "@nasriya/cron": "^1.1.2",
     "@nasriya/overwatch": "^1.1.4",
     "@nasriya/uuidx": "^1.0.3"
+  },
+  "peerDependencies": {
+    "@redis/client": "^5.8.2",
+    "@aws-sdk/client-s3": "^3.873.0"
+  },
+  "peerDependenciesMeta": {
+    "@redis/client": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
   }
 }

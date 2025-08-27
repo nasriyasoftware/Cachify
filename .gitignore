@@ -21,5 +21,6 @@ test/
 temp/
 *_temp/
 logs*/
+*.log
 
 # Misc

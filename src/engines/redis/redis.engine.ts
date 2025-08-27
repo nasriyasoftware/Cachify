@@ -46,7 +46,6 @@ function createRedisEngine(name: string, client: RedisClientType, options?: { pr
 
                 const key = getKey(record);
                 if (record.flavor === 'files' && Buffer.isBuffer(value)) {
-                    console.info(`[INFO] Storing binary content for file "${key}:${record.file.path}"`);
                     await client.set(key, value);
                 } else {
                     const buffer = atomix.http.bodyCodec.encode(value);

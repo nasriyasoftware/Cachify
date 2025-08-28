@@ -4,7 +4,7 @@ import cron, { ScheduledTask } from "@nasriya/cron";
 import KVCacheRecord from "./record";
 import KVCacheConfig from "../../configs/managers/kv/KVCacheConfig";
 import kvEventsManager from "../../events/managers/kv/KVEventsManager";
-import * as helpers from "../helpers";
+import helpers from "../helpers";
 
 import { CacheStatusChangeHandler } from "../../configs/strategies/docs";
 import { TasksQueue, BaseQueueTask } from "@nasriya/atomix/tools";
@@ -186,7 +186,7 @@ class KVCacheManager {
                     const task: BaseQueueTask = {
                         type: 'eviction_check',
                         action: async () => {
-                            helpers.cacheManagement.eviction.evictIfEnabled({
+                            await helpers.cacheManagement.eviction.evictIfEnabled({
                                 records: this.#_records,
                                 policy: this.#_configs.eviction,
                                 eventsManager: kvEventsManager,
@@ -200,27 +200,15 @@ class KVCacheManager {
             }
         },
         checkIfClearing: (operation: 'get' | 'set' | 'touch' | 'remove' | 'read' | 'has', key: string) => {
-            if (this.#_flags.blocking.clearing) { throw `Cannot ${operation} (${key}) while clearing` }
+            if (this.#_flags.blocking.clearing) { throw new Error(`Cannot ${operation} (${key}) while clearing`) }
         },
-        createRemovePromise: (key: string, scope: string = 'global') => {
-            return new Promise<boolean>((resolve, reject) => {
-                const scopeMap = this.#_helpers.records.getScopeMap(scope);
-                const record = scopeMap.get(key);
-                if (!record) { return false }
+        createRemovePromise: async (key: string, scope: string = 'global'): Promise<boolean> => {
+            const scopeMap = this.#_helpers.records.getScopeMap(scope);
+            const record = scopeMap.get(key);
+            if (!record) { return false }
 
-                let timeout: NodeJS.Timeout | null = null;
-                kvEventsManager.on('remove', async (event) => {
-                    if (timeout) { clearTimeout(timeout) }
-                    scopeMap.delete(key);
-                    resolve(true);
-                }, { once: true });
-
-                kvEventsManager.emit.remove(record, { reason: 'manual' });
-
-                timeout = setTimeout(() => {
-                    reject(new Error(`Failed to remove record (${record.flavor}:${record.scope}:${record.key}): timed out.`));
-                }, 5000);
-            })
+            await kvEventsManager.emit.remove(record, { reason: 'manual' });
+            return true;
         },
         startBlockingProcess: (process: BlockingProcess) => {
             for (const [key, value] of Object.entries(this.#_flags.blocking)) {
@@ -411,7 +399,7 @@ class KVCacheManager {
                     const task: BaseQueueTask = {
                         id: `${record.scope}:${record.key}`,
                         type: 'remove',
-                        action: () => this.#_helpers.createRemovePromise(record.key, record.scope),
+                        action: async () => await this.#_helpers.createRemovePromise(record.key, record.scope),
                         onReject: (error) => console.error(error),
                     }
 

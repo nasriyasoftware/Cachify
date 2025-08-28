@@ -1,12 +1,12 @@
 import kvEventsManager, { KVEventsManager } from "../managers/kv/KVEventsManager";
 import fileEventsManager, { FileEventsManager } from "../managers/file/FileEventsManager";
-import { KVCacheEvent, KVCacheEvents, KVCachePayload, KVRemovalReason } from "../managers/kv/docs";
-import { AddHandlerOptions } from "@nasriya/atomix";
-import { FileCacheEvent, FileCacheEvents, FileCachePayload, FileRemovalReason } from "../managers/file/docs";
-import { CacheFlavor } from "../../docs/docs";
 import KVCacheRecord from "../../memory/kv/record";
-import { EvictReason } from "../docs";
 import FileCacheRecord from "../../memory/files/file";
+import type { EvictReason } from "../docs";
+import type { CacheFlavor } from "../../docs/docs";
+import type { AddHandlerOptions } from "@nasriya/atomix";
+import type { KVCacheEvent, KVCacheEvents, KVCachePayload, KVRemovalReason } from "../managers/kv/docs";
+import type { FileCacheEvent, FileCacheEvents, FileCachePayload, FileRemovalReason } from "../managers/file/docs";
 
 export const on = {
     /**

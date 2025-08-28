@@ -27,7 +27,7 @@ export class KVEventsManager {
      * @since v1.0.0
      */
     async #_emit<E extends KVCacheEvent>(event: E, payload: KVCacheEvents[E]['payload']): Promise<void> {
-        this.#_eventEmitter.emit(event, payload);
+        await this.#_eventEmitter.emit(event, payload);
     }
 
     /**

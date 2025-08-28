@@ -4,7 +4,7 @@ import cron, { ScheduledTask } from "@nasriya/cron";
 import FileCacheRecord from "./file";
 import FileCacheConfig from "../../configs/managers/file/FileCacheConfig";
 import fileEventsManager from "../../events/managers/file/FileEventsManager";
-import * as helpers from "../helpers";
+import helpers from "../helpers";
 
 import { CacheStatusChangeHandler } from "../../configs/strategies/docs";
 import { BaseQueueTask, TasksQueue } from "@nasriya/atomix/tools";
@@ -60,8 +60,10 @@ class FileCacheManager {
                 if (event.flavor === 'files') {
                     const scopeMap = this.#_helpers.records.getScopeMap(event.item.scope);
                     const record = scopeMap.get(event.item.key)!;
-                    await engineProxy.remove(record);
-                    scopeMap.delete(event.item.key);
+                    if (record) {
+                        await engineProxy.remove(record);
+                        scopeMap.delete(event.item.key);
+                    }
                 }
             }, { type: 'beforeAll' });
 
@@ -172,7 +174,7 @@ class FileCacheManager {
                         id: 'eviction_check',
                         type: 'eviction_check',
                         action: async () => {
-                            helpers.cacheManagement.eviction.evictIfEnabled({
+                            await helpers.cacheManagement.eviction.evictIfEnabled({
                                 records: this.#_files,
                                 policy: this.#_configs.eviction,
                                 eventsManager: fileEventsManager,
@@ -223,27 +225,15 @@ class FileCacheManager {
             return configs;
         },
         checkIfClearing: (operation: 'get' | 'set' | 'touch' | 'remove' | 'read' | 'has', key: string) => {
-            if (this.#_flags.blocking.clearing) { throw `Cannot ${operation} (${key}) while clearing` }
+            if (this.#_flags.blocking.clearing) { throw new Error(`Cannot ${operation} (${key}) while clearing`) }
         },
-        createRemovePromise: (key: string, scope: string = 'global') => {
-            return new Promise<boolean>((resolve, reject) => {
-                const scopeMap = this.#_helpers.records.getScopeMap(scope);
-                const record = scopeMap.get(key);
-                if (!record) { return false }
+        createRemovePromise: async (key: string, scope: string = 'global'): Promise<boolean> => {
+            const scopeMap = this.#_helpers.records.getScopeMap(scope);
+            const record = scopeMap.get(key);
+            if (!record) { return false }
 
-                let timeout: NodeJS.Timeout | null = null;
-                fileEventsManager.on('remove', async (event) => {
-                    if (timeout) { clearTimeout(timeout) }
-                    scopeMap.delete(key);
-                    resolve(true);
-                }, { once: true });
-
-                fileEventsManager.emit.remove(record, { reason: 'manual' });
-
-                timeout = setTimeout(() => {
-                    reject(new Error(`Failed to remove record (${record.flavor}:${record.scope}:${record.key}): timed out.`));
-                }, 5000);
-            })
+            await fileEventsManager.emit.remove(record, { reason: 'manual' });
+            return true;
         },
         startBlockingProcess: (process: BlockingProcess) => {
             for (const [key, value] of Object.entries(this.#_flags.blocking)) {
@@ -489,7 +479,7 @@ class FileCacheManager {
                     const task: BaseQueueTask = {
                         id: `${record.scope}:${record.key}`,
                         type: 'remove',
-                        action: () => this.#_helpers.createRemovePromise(record.key, record.scope),
+                        action: async () => await this.#_helpers.createRemovePromise(record.key, record.scope),
                         onReject: (error) => console.error(error),
                     }
 

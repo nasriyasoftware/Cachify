@@ -9,6 +9,7 @@ const locals = Object.freeze({
 })
 
 export async function setup() {
+    await fs.promises.rm(TEST_DIR, { recursive: true, force: true });
     await fs.promises.mkdir(TEST_DIR, { recursive: true });
     await fs.promises.writeFile(locals.TEST_FILE_PATH, FILE_CONTENT);
 

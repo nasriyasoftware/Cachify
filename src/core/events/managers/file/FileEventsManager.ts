@@ -29,7 +29,19 @@ export class FileEventsManager {
      * @since v1.0.0
      */
     async #_emit<E extends FileCacheEvent>(event: E, payload: FileCacheEvents[E]['payload']): Promise<void> {
-        this.#_eventEmitter.emit(event, payload);
+        if (!('item' in payload)) {
+            console.log(`Instance: ${payload instanceof FileEventsManager}`)
+            console.dir(payload, { colors: true, depth: Infinity });
+            const error = new Error('Event payload must have a item property.');
+            error.cause = {
+                event,
+                payload,
+            }
+
+            throw error;
+        }
+
+        await this.#_eventEmitter.emit(event, payload);
     }
 
     /**

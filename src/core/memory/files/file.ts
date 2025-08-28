@@ -54,7 +54,7 @@ class FileCacheRecord {
         ttl: undefined as TTLItemConfig | undefined,
         watcher: {
             task: null as unknown as Watcher,
-            systemHandlers: {
+            systemHandlers: Object.freeze({
                 onUpdate: async (event: unknown) => {
                     if (this.isContentCached) {
                         await this.refresh();
@@ -66,7 +66,7 @@ class FileCacheRecord {
                 onRename: async () => {
                     await fileEventsManager.emit.remove(this, { reason: 'file.rename' });
                 }
-            }
+            })
         }
     }
 
@@ -107,7 +107,7 @@ class FileCacheRecord {
         }, { once: true });
     }
 
-    readonly #_helpers = {
+    readonly #_helpers = Object.freeze({
         loadContent: async () => {
             await this.#_helpers.updateFileStats();
             const content = await fs.promises.readFile(this.#_data.file.path);
@@ -184,7 +184,7 @@ class FileCacheRecord {
             this.#_data.stats.dates.lastAccess = Date.now();
             this.#_helpers.refreshTTL();
         }
-    }
+    })
 
     /**
      * Initializes the file cache record.

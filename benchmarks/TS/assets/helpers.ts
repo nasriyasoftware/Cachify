@@ -15,9 +15,6 @@ export const consoleX = new ConsoleX({
 });
 
 export function getConfig() {
-    process.env.BENCHMARK_KV_COUNT = String(10_000)
-    process.env.BENCHMARK_FILES_COUNT = String(1_000);
-
     const BENCHMARK_KV_COUNT = parseInt(process.env.BENCHMARK_KV_COUNT || '') || 100_000;
     const BENCHMARK_FILES_COUNT = parseInt(process.env.BENCHMARK_FILES_COUNT || '') || 1000;
     const BENCHMARK_OUT_DIR = process.env.BENCHMARK_OUT_DIR || path.resolve(process.cwd(), 'benchmarks');

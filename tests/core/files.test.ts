@@ -142,13 +142,14 @@ describe("Files Cache Manager Integration", () => {
         expect(cachify.files.size).toBe(0);
     });
 
-    it("should update content (if it's already cached) after file change", async () => {
-        await cachify.files.set(filesPaths.test, { preload: true, initiator: 'warmup', ttl: { value: 10000, flavor: 'files' } });
+    it("should update content (when it's already cached) after file change", async () => {
+        await cachify.files.set(filesPaths.test, { ttl: { value: 10000, flavor: 'files' } });
+        await cachify.files.read({ filePath: filesPaths.test });
 
         // Modify the file contents on disk
         await fs.writeFile(filesPaths.test, "Updated content");
 
-        // Wait some time for watcher/refresh to pick up change (adjust as needed)
+        // Wait some time for watcher/refresh to pick up change
         await new Promise(resolve => setTimeout(resolve, 220));
 
         // Read again and verify updated content

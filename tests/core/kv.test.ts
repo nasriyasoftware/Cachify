@@ -35,8 +35,8 @@ const redisHandlers = {
 }
 
 describe('KVCacheManager - Clear Operations', () => {
-    beforeEach(() => {
-        mainHandlers.beforeEach();
+    beforeEach(async () => {
+        await mainHandlers.beforeEach();
     });
     afterAll(async () => {
         await mainHandlers.afterAll();
@@ -112,8 +112,8 @@ describe('KVCacheManager - Clear Operations', () => {
 
     if (process.env.REDIS_TEST_URL) {
         describe('Redis adapter', () => {
-            beforeAll(redisHandlers.beforeAll);
-            afterAll(redisHandlers.afterAll);
+            beforeAll(async () => await redisHandlers.beforeAll());
+            afterAll(async () => await redisHandlers.afterAll());
 
             it('should clear all records across all scopes', async () => {
                 await Promise.all([

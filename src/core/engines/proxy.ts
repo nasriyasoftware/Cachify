@@ -1,9 +1,9 @@
 import cachify from "../../cachify";
 import enginesManager from "./manager";
 import EngineError from "./EngineError";
-import { CacheRecord } from "../docs/docs";
 import { TasksQueue } from "@nasriya/atomix/tools";
-import { Brand, Prettify } from "@nasriya/atomix";
+import type { CacheRecord } from "../docs/docs";
+import type { Brand, Prettify } from "@nasriya/atomix";
 
 type IoOps = 'read' | 'set' | 'remove';
 type QueueKey = Brand<string, 'queueKey'>;

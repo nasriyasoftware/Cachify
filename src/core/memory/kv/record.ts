@@ -17,17 +17,17 @@ class KVCacheRecord {
 
     readonly #_stats = {
         dates: {
-            created: BigInt(0),
-            expireAt: undefined as bigint | undefined,
-            lastAccess: undefined as bigint | undefined,
-            lastUpdate: undefined as bigint | undefined
+            created: 0,
+            expireAt: undefined as number | undefined,
+            lastAccess: undefined as number | undefined,
+            lastUpdate: undefined as number | undefined
         },
         counts: {
-            read: BigInt(0),
-            update: BigInt(0),
-            touch: BigInt(0),
-            hit: BigInt(0),
-            miss: BigInt(0)
+            read: 0,
+            update: 0,
+            touch: 0,
+            hit: 0,
+            miss: 0
         }
     }
 
@@ -42,33 +42,18 @@ class KVCacheRecord {
         if (configs.preload) {
             switch (configs.initiator) {
                 case 'warmup': {
-                    this.#_stats.dates.created = BigInt(Date.now());
+                    this.#_stats.dates.created = Date.now();
                 }
                     break;
 
                 case 'restore': {
-                    const { dates, counts } = configs.stats;
-                    this.#_stats = {
-                        dates: {
-                            created: BigInt(dates.created),
-                            expireAt: typeof dates.expireAt === 'number' ? BigInt(dates.expireAt) : undefined,
-                            lastAccess: typeof dates.lastAccess === 'number' ? BigInt(dates.lastAccess) : undefined,
-                            lastUpdate: typeof dates.lastUpdate === 'number' ? BigInt(dates.lastUpdate) : undefined
-                        },
-                        counts: {
-                            read: BigInt(counts.read),
-                            update: BigInt(counts.update),
-                            touch: BigInt(counts.touch),
-                            hit: BigInt(counts.hit),
-                            miss: BigInt(counts.miss)
-                        }
-                    };
+                    this.#_stats = configs.stats;
 
                 }
                     break;
             }
         } else {
-            this.#_stats.dates.created = BigInt(Date.now());
+            this.#_stats.dates.created = Date.now();
         }
 
         kvEventsManager.on('remove', (event) => {
@@ -113,18 +98,18 @@ class KVCacheRecord {
                 this.#_stats.dates.lastAccess || this.#_stats.dates.created :
                 this.#_stats.dates.created;
 
-            const expireAt = baseTime + BigInt(ttl);
+            const expireAt = baseTime + ttl;
             if (expireAt === this.#_stats.dates.expireAt) { return }
 
             this.#_stats.dates.expireAt = expireAt;
             this.#_expireJob?.cancel?.();
-            this.#_expireJob = cron.scheduleTime(Number(expireAt), async () => {
+            this.#_expireJob = cron.scheduleTime(expireAt, async () => {
                 this.#_ttl?.onExpire?.(this);
                 await kvEventsManager.emit.expire(this);
             });
         },
         registerAccess: () => {
-            this.#_stats.dates.lastUpdate = BigInt(Date.now());
+            this.#_stats.dates.lastUpdate = Date.now();
             this.#_helpers.refreshTTL();
         }
     }
@@ -232,7 +217,6 @@ class KVCacheRecord {
     async export() {
         const response = await engineProxy.read(this);
         if (response.value === undefined) { return undefined }
-        const { dates, counts } = this.#_stats;
 
         return {
             flavor: this.#_flavor,
@@ -240,21 +224,7 @@ class KVCacheRecord {
             scope: this.#_scope,
             key: this.#_key,
             value: response.value,
-            stats: {
-                dates: {
-                    created: Number(dates.created),
-                    expireAt: typeof dates.expireAt === 'bigint' ? Number(dates.expireAt) : undefined,
-                    lastAccess: typeof dates.lastAccess === 'bigint' ? Number(dates.lastAccess) : undefined,
-                    lastUpdate: typeof dates.lastUpdate === 'bigint' ? Number(dates.lastUpdate) : undefined
-                },
-                counts: {
-                    read: Number(counts.read),
-                    update: Number(counts.update),
-                    touch: Number(counts.touch),
-                    hit: Number(counts.hit),
-                    miss: Number(counts.miss)
-                }
-            },
+            stats: this.#_stats,
             ttl: {
                 value: this.#_ttl ? this.#_ttl.value : 0,
                 sliding: this.#_ttl ? this.#_ttl.sliding : false,

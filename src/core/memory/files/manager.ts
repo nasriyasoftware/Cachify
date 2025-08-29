@@ -102,15 +102,15 @@ class FileCacheManager {
                 const aScore = aStats.counts.touch + aStats.counts.read + aStats.counts.hit;
                 const bScore = bStats.counts.touch + bStats.counts.read + bStats.counts.hit;
 
-                const aAccessTime = aStats.dates.lastAccess ?? BigInt(0);
-                const bAccessTime = bStats.dates.lastAccess ?? BigInt(0);
+                const aAccessTime = aStats.dates.lastAccess ?? 0;
+                const bAccessTime = bStats.dates.lastAccess ?? 0;
 
                 // Prefer older and less-used entries
                 if (aScore === bScore) {
-                    return Number(aAccessTime - bAccessTime);
+                    return aAccessTime - bAccessTime;
                 }
 
-                return Number(aScore - bScore);
+                return aScore - bScore;
             }
         },
         helpers: {
@@ -248,11 +248,11 @@ class FileCacheManager {
     readonly #_stats = {
         sizeInMemory: 0,
         counts: {
-            read: BigInt(0),
-            update: BigInt(0),
-            touch: BigInt(0),
-            hit: BigInt(0),
-            miss: BigInt(0)
+            read: 0,
+            update: 0,
+            touch: 0,
+            hit: 0,
+            miss: 0
         }
     }
 

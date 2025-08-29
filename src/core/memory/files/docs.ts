@@ -105,8 +105,8 @@ export type FilePreloadRestoreSetOptions = FileTypeMap['options']['preload']['re
 export type FileNormalSetOptions = FileTypeMap['options']['normal'];
 
 export type FileStats = {
-    mtime: bigint;
-    size: bigint;
+    mtime: number;
+    size: number;
 };
 
 interface FileBaseOptions {

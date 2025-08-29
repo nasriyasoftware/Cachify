@@ -24,7 +24,7 @@ class FileCacheRecord {
     #_initialized = false;
 
     readonly #_content = Object.seal({
-        size: BigInt(0)
+        size: 0
     })
 
     readonly #_data = {
@@ -36,17 +36,17 @@ class FileCacheRecord {
         },
         stats: {
             dates: {
-                created: BigInt(0),
-                expireAt: undefined as bigint | undefined,
-                lastAccess: undefined as bigint | undefined,
-                lastUpdate: undefined as bigint | undefined
+                created: 0,
+                expireAt: undefined as number | undefined,
+                lastAccess: undefined as number | undefined,
+                lastUpdate: undefined as number | undefined
             },
             counts: {
-                read: BigInt(0),
-                update: BigInt(0),
-                touch: BigInt(0),
-                miss: BigInt(0),
-                hit: BigInt(0)
+                read: 0,
+                update: 0,
+                touch: 0,
+                miss: 0,
+                hit: 0
             }
         }
     }
@@ -85,27 +85,13 @@ class FileCacheRecord {
 
             switch (configs.initiator) {
                 case 'warmup': {
-                    this.#_data.stats.dates.created = BigInt(Date.now());
+                    this.#_data.stats.dates.created = Date.now();
                 }
                     break;
 
                 case 'restore': {
                     const { dates, counts } = configs.stats;
-                    this.#_data.stats = {
-                        dates: {
-                            created: BigInt(dates.created),
-                            expireAt: typeof dates.expireAt === 'number' ? BigInt(dates.expireAt) : undefined,
-                            lastAccess: typeof dates.lastAccess === 'number' ? BigInt(dates.lastAccess) : undefined,
-                            lastUpdate: typeof dates.lastUpdate === 'number' ? BigInt(dates.lastUpdate) : undefined
-                        },
-                        counts: {
-                            read: BigInt(counts.read),
-                            update: BigInt(counts.update),
-                            touch: BigInt(counts.touch),
-                            hit: BigInt(counts.hit),
-                            miss: BigInt(counts.miss)
-                        }
-                    };
+                    this.#_data.stats = configs.stats;
                 }
                     break;
             }
@@ -113,7 +99,7 @@ class FileCacheRecord {
             this.#_data.file.path = filePath;
             this.#_data.file.name = path.basename(filePath);
             this.#_key = atomix.http.btoa(filePath);
-            this.#_data.stats.dates.created = BigInt(Date.now());
+            this.#_data.stats.dates.created = Date.now();
         }
 
         fileEventsManager.on('remove', (event) => {
@@ -129,17 +115,17 @@ class FileCacheRecord {
             const content = await filesystem.readFile(this.#_data.file.path);
 
             this.#_data.stats.counts.update++;
-            this.#_data.stats.dates.lastUpdate = BigInt(Date.now());
+            this.#_data.stats.dates.lastUpdate = Date.now();
             this.#_data.file.eTag = atomix.http.btoa(`${this.#_data.file.stats.size}-${this.#_data.file.stats.mtime}`);
             this.#_helpers.refreshTTL();
 
             // Storing content
             await engineProxy.set(this, content);
 
-            const contentLength = BigInt(content.length);
+            const contentLength = content.length;
             const delta = contentLength - this.#_content.size;
             this.#_content.size = contentLength;
-            if (delta !== BigInt(0)) {
+            if (delta !== 0) {
                 await fileEventsManager.emit.contentSizeChange(this, delta);
             }
         },
@@ -175,8 +161,8 @@ class FileCacheRecord {
         updateFileStats: async () => {
             const { size, mtime } = await filesystem.stat(this.#_data.file.path);
             this.#_data.file.stats = {
-                size: BigInt(size),
-                mtime: BigInt(mtime.getTime()),
+                size,
+                mtime: mtime.getTime(),
             };
 
             await this.#_helpers.checkSizeQuota();
@@ -192,18 +178,18 @@ class FileCacheRecord {
                 this.#_data.stats.dates.lastAccess || this.#_data.stats.dates.created :
                 this.#_data.stats.dates.created;
 
-            const expireAt = baseTime + BigInt(ttl);
+            const expireAt = baseTime + ttl;
             if (expireAt === this.#_data.stats.dates.expireAt) { return }
 
             this.#_data.stats.dates.expireAt = expireAt;
             this.#_expireJob?.cancel?.();
-            this.#_expireJob = cron.scheduleTime(Number(expireAt), async () => {
+            this.#_expireJob = cron.scheduleTime(expireAt, async () => {
                 ttlConfig?.onExpire?.(this);
                 await fileEventsManager.emit.expire(this);
             });
         },
         registerAccess: () => {
-            this.#_data.stats.dates.lastAccess = BigInt(Date.now());
+            this.#_data.stats.dates.lastAccess = Date.now();
             this.#_helpers.refreshTTL();
         }
     })
@@ -291,8 +277,8 @@ class FileCacheRecord {
      */
     async clearContent() {
         const delta = - this.#_content.size;
-        this.#_content.size = BigInt(0);
-        if (delta !== BigInt(0)) {
+        this.#_content.size = 0;
+        if (delta !== 0) {
             await fileEventsManager.emit.contentSizeChange(this, delta);
         }
     }
@@ -384,38 +370,20 @@ class FileCacheRecord {
      * @returns A promise that resolves to the JSON object representation of the file cache record, or undefined if no content exists.
      */
     async export() {
-        const { dates, counts } = this.#_data.stats;
-        const size = Number(this.#_data.file.stats.size);
+        const size = this.#_data.file.stats.size;
 
         return {
             flavor: this.flavor,
             engines: this.#_engines,
             scope: this.scope,
             key: this.key,
-            stats: {
-                dates: {
-                    created: Number(dates.created),
-                    expireAt: typeof dates.expireAt === 'bigint' ? Number(dates.expireAt) : undefined,
-                    lastAccess: typeof dates.lastAccess === 'bigint' ? Number(dates.lastAccess) : undefined,
-                    lastUpdate: typeof dates.lastUpdate === 'bigint' ? Number(dates.lastUpdate) : undefined
-                },
-                counts: {
-                    read: Number(counts.read),
-                    update: Number(counts.update),
-                    touch: Number(counts.touch),
-                    hit: Number(counts.hit),
-                    miss: Number(counts.miss)
-                }
-            },
+            stats: this.#_data.stats,
             file: {
                 path: this.#_data.file.path,
                 name: this.#_data.file.name,
                 eTag: this.#_data.file.eTag,
                 size: size,
-                stats: {
-                    size: size,
-                    mtime: Number(this.#_data.file.stats.mtime)
-                },
+                stats: this.#_data.file.stats,
                 isCached: this.isContentCached
             },
             ttl: {

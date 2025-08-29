@@ -244,7 +244,7 @@ export class FileEventsManager {
          * @param {number} delta - The change in content size (positive for addition, negative for removal).
          * @since v1.0.0
          */
-        contentSizeChange: async (record: FileCacheRecord, delta: bigint) => {
+        contentSizeChange: async (record: FileCacheRecord, delta: number) => {
             const payload: FileContentSizeChangeEvent = { item: record.toJSON(), flavor: record.flavor, type: 'fileContentSizeChange', delta: Number(delta) };
             await this.#_emit('fileContentSizeChange', payload);
         }

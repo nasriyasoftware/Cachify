@@ -1,5 +1,5 @@
 import cachify from "../../src/cachify";
-import overwatch from "@nasriya/overwatch";
+import overwatch, { UpdateEvent } from "@nasriya/overwatch";
 import atomix from "@nasriya/atomix";
 import { cleanup } from "../helpers/helpers";
 
@@ -142,16 +142,33 @@ describe("Files Cache Manager Integration", () => {
     });
 
     it("should update content (when it's already cached) after file change", async () => {
-        await cachify.files.set(filesPaths.test, { ttl: { value: 10000, flavor: 'files' } });
-        await cachify.files.read({ filePath: filesPaths.test });
+        expect(overwatch.control.isRunning()).toBe(true);
+
+        await cachify.files.set(filesPaths.test, {
+            preload: true,
+            initiator: 'warmup',
+            ttl: { value: 10000, flavor: 'files' }
+        });
+
+        const inspection = cachify.files.inspect({ filePath: filesPaths.test });
+        expect(inspection?.file.isCached).toBe(true);
+
+        const watcher = await overwatch.watchFile(filesPaths.test);
+
+        const updateEvent = new Promise<UpdateEvent>((resolve, reject) => {
+            watcher.onUpdate(event => {
+                setTimeout(() => resolve(event), 100);
+            });
+
+            setTimeout(() => reject(new Error(`The watcher timed out`)), 1000);
+        })
 
         // Modify the file contents on disk
         await fs.writeFile(filesPaths.test, "Updated content");
 
-        // Wait some time for watcher/refresh to pick up change
-        await new Promise(resolve => setTimeout(resolve, 220));
+        const event = await updateEvent;
 
-        // Read again and verify updated content
+        expect(event.path).toBe(filesPaths.test.toLowerCase());
         const readResult = await cachify.files.read({ filePath: filesPaths.test });
         expect(readResult!.content.toString()).toBe("Updated content");
     });

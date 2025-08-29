@@ -122,7 +122,7 @@ class CacheHelpers {
                     for (const [_, scopeMap] of records) {
                         for (const [_, record] of scopeMap) {
                             const lastActivity = record.stats.dates.lastAccess || record.stats.dates.created;
-                            const diff = BigInt(Date.now()) - lastActivity;
+                            const diff = Date.now() - lastActivity;
 
                             if (diff > policy.maxIdleTime) {
                                 await eventsManager.emit.evict(record as any, { reason: 'idle' });

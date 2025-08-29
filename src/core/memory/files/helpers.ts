@@ -4,7 +4,7 @@ import enginesManager from "../../engines/manager";
 import FilesCacheConfig from "../../configs/managers/file/FileCacheConfig";
 import utils from '../../../utils/utils';
 import type { TTLFileOptions } from "../../configs/strategies/ttl/TTLConfig";
-import type { FileNormalSetConfigs, FileNormalSetOptions, FilePreloadRestoreSetConfigs, FilePreloadRestoreSetOptions, FilePreloadSetConfigs, FilePreloadWarmupSetConfigs, FilePreloadWarmupSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
+import type { FileNormalSetConfigs, FileNormalSetOptions, FilePreloadRestoreSetConfigs, FilePreloadRestoreSetOptions, FilePreloadSetConfigs, FilePreloadWarmupSetConfigs, FilePreloadWarmupSetOptions, FileSetConfigs, FileSetOptions, FileStats } from "./docs";
 import type { CachePreloadInitiator } from '../../docs/docs';
 import constants from '../../consts/consts';
 
@@ -156,7 +156,7 @@ class FilesHelpers {
                                 name: '',
                                 eTag: '',
                                 size: 0,
-                                stats: {} as fs.Stats,
+                                stats: { size: 0, mtime: 0 },
                                 isCached: false
                             }
                         }

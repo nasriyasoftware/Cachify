@@ -85,34 +85,35 @@ class KVCacheManager {
 
     readonly #_memoryManager = {
         data: {
-            sortingHandler: (a: KVCacheRecord, b: KVCacheRecord) => {
+            sortingHandler: (a: KVCacheRecord, b: KVCacheRecord): number => {
                 const aStats = a.stats;
                 const bStats = b.stats;
 
                 const aScore = aStats.counts.touch + aStats.counts.read + aStats.counts.hit;
                 const bScore = bStats.counts.touch + bStats.counts.read + bStats.counts.hit;
 
-                const aAccessTime = aStats.dates.lastAccess ?? 0;
-                const bAccessTime = bStats.dates.lastAccess ?? 0;
+                const aAccessTime = aStats.dates.lastAccess ?? BigInt(0);
+                const bAccessTime = bStats.dates.lastAccess ?? BigInt(0);
 
                 // Prefer older and less-used entries
                 if (aScore === bScore) {
-                    return aAccessTime - bAccessTime;
+                    return Number(aAccessTime - bAccessTime);
                 }
 
-                return aScore - bScore;
+                return Number(aScore - bScore);
             }
         },
         helpers: {
             getRecordSize: (key: string, value: unknown) => {
                 const keyLength = Buffer.byteLength(key);
                 const valueLength = helpers.estimateValueSize(value);
-                return keyLength + valueLength;
+                return BigInt(keyLength + valueLength);
             },
-            applyDelta: async (delta: number) => {
-                this.#_stats.sizeInMemory = Math.max(this.#_stats.sizeInMemory + delta, 0);
-                const sizeToFree = () => Math.max(this.#_stats.sizeInMemory - this.#_configs.maxTotalSize, 0);
-                if (sizeToFree() === 0) { return }
+            applyDelta: async (delta: bigint) => {
+                const sizeInMemNum = Number(this.#_stats.sizeInMemory);
+                this.#_stats.sizeInMemory = BigInt(Math.max(sizeInMemNum + Number(delta), 0));
+                const sizeToFree = () => BigInt(Math.max(sizeInMemNum - this.#_configs.maxTotalSize, 0));
+                if (sizeToFree() === BigInt(0)) { return }
 
                 const taskId = `free_memory`;
                 const isInQueue = this.#_queue.hasTask(taskId);
@@ -134,7 +135,7 @@ class KVCacheManager {
 
                         // Attempting to free memory
                         for (const record of allRecords) {
-                            if (sizeToFree() === 0) { break }
+                            if (sizeToFree() === BigInt(0)) { break }
                             if (!this.#_records.get(record.scope)!.has(record.key)) { continue }
                             await kvEventsManager.emit.remove(record, { reason: 'memory.limit' });
                         }
@@ -221,11 +222,11 @@ class KVCacheManager {
     }
 
     readonly #_stats = {
-        sizeInMemory: 0,
+        sizeInMemory: BigInt(0),
         counts: {
-            read: 0,
-            update: 0,
-            touch: 0
+            read: BigInt(0),
+            update: BigInt(0),
+            touch: BigInt(0)
         }
     }
 

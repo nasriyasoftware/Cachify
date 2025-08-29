@@ -257,10 +257,10 @@ export const emit = {
         /**
          * Emits the 'fileContentSizeChange' event when the content size of a file changes.
          * @param {FileCacheRecord} record - The file cache record that has changed.
-         * @param {number} delta - The change in content size (positive for addition, negative for removal).
+         * @param {bigint} delta - The change in content size (positive for addition, negative for removal).
          * @since v1.0.0
          */
-        contentSizeChange: (record: FileCacheRecord, delta: number) => fileEventsManager.emit.contentSizeChange(record, delta),
+        contentSizeChange: (record: FileCacheRecord, delta: bigint) => fileEventsManager.emit.contentSizeChange(record, delta),
     },
 
     /**

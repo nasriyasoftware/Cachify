@@ -1,6 +1,7 @@
 import FileCacheRecord from "./file";
-import { Prettify, RequiredStrict } from "@nasriya/atomix";
-import { TTLFileOptions } from "../../configs/strategies/ttl/TTLConfig";
+import type { Prettify, RequiredStrict } from "@nasriya/atomix";
+import type { TTLFileOptions } from "../../configs/strategies/ttl/TTLConfig";
+import type { Stats } from "fs";
 
 type FileTypeMap = {
     options: {
@@ -103,6 +104,10 @@ export type FilePreloadWarmupSetOptions = FileTypeMap['options']['preload']['war
 export type FilePreloadRestoreSetOptions = FileTypeMap['options']['preload']['restore'];
 export type FileNormalSetOptions = FileTypeMap['options']['normal'];
 
+export type FileStats = {
+    mtime: bigint;
+    size: bigint;
+};
 
 interface FileBaseOptions {
     /**

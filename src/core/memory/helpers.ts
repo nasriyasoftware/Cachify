@@ -79,14 +79,14 @@ class CacheHelpers {
         sortBy: {
             oldest: <T extends CacheRecord>(maps: Map<string, Map<string, T>>) => {
                 const arr = this.records.toArray(maps);
-                return arr.sort((a, b) => a.stats.dates.created - b.stats.dates.created);
+                return arr.sort((a, b) => Number(a.stats.dates.created - b.stats.dates.created));
             },
             leastRecentlyUsed: <T extends CacheRecord>(maps: Map<string, Map<string, T>>) => {
                 const arr = this.records.toArray(maps);
                 return arr.sort((a, b) => {
                     const lastAccessA = a.stats.dates.lastAccess || a.stats.dates.created;
                     const lastAccessB = b.stats.dates.lastAccess || b.stats.dates.created;
-                    return lastAccessA - lastAccessB;
+                    return Number(lastAccessA - lastAccessB);
                 });
             },
             leastFrequentlyUsed: <T extends CacheRecord>(maps: Map<string, Map<string, T>>) => {
@@ -94,7 +94,7 @@ class CacheHelpers {
                 return arr.sort((a, b) => {
                     const countA = a.stats.counts.touch + a.stats.counts.read;
                     const countB = b.stats.counts.touch + b.stats.counts.read;
-                    return countA - countB;
+                    return Number(countA - countB);
                 });
             }
         }
@@ -122,7 +122,7 @@ class CacheHelpers {
                     for (const [_, scopeMap] of records) {
                         for (const [_, record] of scopeMap) {
                             const lastActivity = record.stats.dates.lastAccess || record.stats.dates.created;
-                            const diff = Date.now() - lastActivity;
+                            const diff = BigInt(Date.now()) - lastActivity;
 
                             if (diff > policy.maxIdleTime) {
                                 await eventsManager.emit.evict(record as any, { reason: 'idle' });

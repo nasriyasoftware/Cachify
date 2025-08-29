@@ -3,6 +3,7 @@ import path from 'path';
 import cachify from "../../../../src/cachify";
 import helpers, { consoleX, generateTestAction } from "../../assets/helpers";
 import { BenchmarkName, BenchMeta, StageName, StagePromisePayload, TEST_DIR, TestReturnType, FILE_CONTENT } from "../../setup";
+import filesystem from '../../../../src/core/memory/files/filesystem';
 
 const locals = Object.freeze({
     TEST_FILE_PATH: path.join(TEST_DIR, 'cachify-benchmark.txt'),
@@ -11,14 +12,14 @@ const locals = Object.freeze({
 export async function setup() {
     await fs.promises.rm(TEST_DIR, { recursive: true, force: true });
     await fs.promises.mkdir(TEST_DIR, { recursive: true });
-    await fs.promises.writeFile(locals.TEST_FILE_PATH, FILE_CONTENT);
+    await filesystem.writeFile(locals.TEST_FILE_PATH, FILE_CONTENT);
 
     cachify.files.configs.maxFileSize = 1024 * 1024 * 10; // 10 MB
     cachify.files.configs.maxTotalSize = 1024 * 1024 * 50; // 50 MB
 
     for (let i = 0; i < helpers.getConfig().file_count; i++) {
         const filePath = path.join(TEST_DIR, `cachify-benchmark-${i}.txt`);
-        await fs.promises.writeFile(filePath, FILE_CONTENT);
+        await filesystem.writeFile(filePath, FILE_CONTENT);
     }
 }
 

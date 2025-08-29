@@ -1,14 +1,11 @@
+import cachify from "../../cachify";
 import atomix from "@nasriya/atomix";
 import constants from "../consts/consts";
-import cachify from "../../cachify";
-import { CacheFlavor, CacheMetaData } from "../docs/docs";
-import { BackupInternalParameters, ProxyBackupParameters, ProxyRestoreParameters, RestoreInternalParameters, StorageServices } from "./docs";
 import persistenceManager from "./persistence.manager";
-import PersistanceService from "./PersistanceService";
+import type { CacheFlavor } from "../docs/docs";
+import type { ProxyBackupParameters, ProxyRestoreParameters, StorageServices } from "./docs";
 
 const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
-
-
 
 class PersistenceProxy {
     readonly #_helpers = {

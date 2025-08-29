@@ -8,7 +8,6 @@ import path from "path";
 import os from "os";
 
 const testDir = path.join(os.tmpdir(), "nasriya", "cachify");
-// cachify.debug = true;
 
 describe("Files Cache Manager Integration", () => {
     let originalDetectionInterval = overwatch.detectionInterval;

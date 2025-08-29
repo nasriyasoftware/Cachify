@@ -1,3 +1,9 @@
 import benchmark from "./TS/main";
+import preventSleep from "./helpers/preventSleep";
 
-await benchmark();
+try {
+    await preventSleep.start();
+    await benchmark();
+} finally {
+    await preventSleep.stop();
+}

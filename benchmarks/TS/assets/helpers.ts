@@ -4,7 +4,7 @@ import cron from "@nasriya/cron";
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { BenchmarkStage, BenchmarkStats, MainBenchmarkAnalytics, MainBenchmarkResults, StagePromisePayload, TEST_DIR, TestReturnAnalytics, TestReturnType } from "../setup";
+import { BenchmarkName, BenchmarkStage, BenchmarkStats, MainBenchmarkAnalytics, MainBenchmarkResults, StageName, StagePromisePayload, TEST_DIR, TestReturnAnalytics, TestReturnType } from "../setup";
 import ConsoleX from "./console";
 
 const configs = getConfig();
@@ -129,7 +129,7 @@ async function analyzeResults(execResults: MainBenchmarkResults) {
         const obj: TestReturnAnalytics = {
             store: value.store,
             tests: (() => {
-                const tests = {};
+                const tests: Record<string, BenchmarkStats> = {};
                 for (const [stageName, taskRes] of Object.entries(value.tests)) {
                     tests[stageName] = helpers.collectBenchmarkStats(stageName, taskRes);
                 }
@@ -144,11 +144,11 @@ async function analyzeResults(execResults: MainBenchmarkResults) {
 
     for (const [benchName, benchRes] of Object.entries(execResults)) {
         // Create the analytics object for the benchmark
-        const benchmarkAnalytics: MainBenchmarkAnalytics = analyticsResults[benchName] = {};
+        const benchmarkAnalytics: MainBenchmarkAnalytics = analyticsResults[benchName as BenchmarkName] = {};
 
         for (const [taskName, taskRes] of Object.entries(benchRes)) {
             // Create the analytics object for the task
-            benchmarkAnalytics[taskName] = convertReturnType(taskRes);
+            benchmarkAnalytics[taskName as BenchmarkName] = convertReturnType(taskRes);
         }
     }
 

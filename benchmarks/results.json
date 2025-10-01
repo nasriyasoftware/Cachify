@@ -1,0 +1,65 @@
+{
+    "KV": {
+        "memory": {
+            "store": [
+                "memory"
+            ],
+            "tests": {
+                "set": {
+                    "stage": "set",
+                    "fastest": 5811,
+                    "slowest": 6784,
+                    "average": 6301.66545,
+                    "succeeded": 100000,
+                    "failed": 0,
+                    "total": 100000
+                },
+                "read": {
+                    "stage": "read",
+                    "fastest": 1614,
+                    "slowest": 2603,
+                    "average": 2079.07605,
+                    "succeeded": 100000,
+                    "failed": 0,
+                    "total": 100000
+                }
+            }
+        }
+    },
+    "FILES": {
+        "memory": {
+            "store": [
+                "memory"
+            ],
+            "tests": {
+                "set": {
+                    "stage": "set",
+                    "fastest": 16637,
+                    "slowest": 17380,
+                    "average": 16743.133,
+                    "succeeded": 1000,
+                    "failed": 0,
+                    "total": 1000
+                },
+                "cold_read": {
+                    "stage": "cold_read",
+                    "fastest": 21,
+                    "slowest": 109,
+                    "average": 50.897,
+                    "succeeded": 1000,
+                    "failed": 0,
+                    "total": 1000
+                },
+                "hot_read": {
+                    "stage": "hot_read",
+                    "fastest": 19,
+                    "slowest": 48,
+                    "average": 32.074,
+                    "succeeded": 1000,
+                    "failed": 0,
+                    "total": 1000
+                }
+            }
+        }
+    }
+}

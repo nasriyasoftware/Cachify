@@ -71,7 +71,7 @@ Cachify is designed to go **beyond traditional key-value caching** like Redis. W
 npm install @nasriya/cachify
 ```
 
-## 2. Importing
+## Importing
 Importing in **ESM** modules
 ```js
 import cachify from '@nasriya/cachify';

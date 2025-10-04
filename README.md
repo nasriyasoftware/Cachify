@@ -1,4 +1,3 @@
-
 <img src="./.github/assets/Cachify_Full_Logo.svg" height="80px" alt="Cachify Logo" center>
 
 # Cachify
@@ -70,6 +69,17 @@ Cachify is designed to go **beyond traditional key-value caching** like Redis. W
 
 ```bash
 npm install @nasriya/cachify
+```
+
+## 2. Importing
+Importing in **ESM** modules
+```js
+import cachify from '@nasriya/cachify';
+```
+
+Importing in **CommonJS** modules
+```js
+const cachify = require('@nasriya/cachify').default;
 ```
 ---
 

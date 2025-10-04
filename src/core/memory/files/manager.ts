@@ -16,7 +16,6 @@ import filesHelpers from "./helpers";
 import { BlockingFlags, BlockingProcess, CacheFlavor } from "../../docs/docs";
 import { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import { FileKeyOptions, FileOptions, FilePathOptions, FilePreloadSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
-import RecordStore from "../../../utils/RecordStore";
 
 class FileCacheManager {
     readonly #_files: FilesMainRecord = new Map();
@@ -160,6 +159,20 @@ class FileCacheManager {
         records: {
             getScopeMap: (scope: string) => {
                 return helpers.records.getScopeMap(scope, this.#_files);
+            },
+            getRecord: (configs: InternalIOConfigs) => {
+                const scopeMap = this.#_helpers.records.getScopeMap(configs.scope);
+                if (configs.caseSensitive) {
+                    return scopeMap.get(configs.key)
+                } else {
+                    const inputPath = configs.filePath.toLowerCase();
+                    for (const record of scopeMap.values()) {
+                        const recordPath = record.file.path;
+                        if (recordPath.toLowerCase() === inputPath) {
+                            return record;
+                        }
+                    }
+                }
             }
         },
         cacheManagement: {
@@ -188,11 +201,15 @@ class FileCacheManager {
                 }, 100)
             }
         },
-        parseFileOptions: (options: FileOptions): Required<FileKeyOptions> => {
-            const configs: Required<FileKeyOptions> = {
+        parseFileOptions: (options: FileOptions): InternalIOConfigs => {
+            const configs = {
                 scope: 'global',
                 key: undefined as unknown as string,
-                caseSensitive: true
+            }
+
+            const pathConfigs = {
+                caseSensitive: true,
+                filePath: ''
             }
 
             if (!atomix.valueIs.record(options)) { throw new TypeError(`The "options" argument must be a record, but instead got ${typeof options}`) }
@@ -220,17 +237,19 @@ class FileCacheManager {
                     if (!atomix.valueIs.string(filePath)) { throw new TypeError(`The "filePath" property of the "options" object (when provided) must be a string, but instead got ${typeof filePath}`) }
                     if (filePath.length === 0) { throw new RangeError(`The "filePath" property of the "options" object (when provided) must be a non-empty string`) }
                     configs.key = atomix.http.btoa(filePath);
+                    pathConfigs.filePath = filePath;
+
+                    if (hasCaseSensitive) {
+                        const caseSensitive = (options as FilePathOptions).caseSensitive;
+                        if (typeof caseSensitive !== 'boolean') { throw new TypeError(`The "caseSensitive" property of the "options" object (when provided) must be a boolean, but instead got ${typeof caseSensitive}`) }
+                        pathConfigs.caseSensitive = caseSensitive;
+                    }
                 }
             } else {
                 throw new SyntaxError(`The "options" object must have either a "key" or a "filePath" property.`);
             }
 
-            if (hasCaseSensitive) {
-                const caseSensitive = (options as FileKeyOptions).caseSensitive;
-                if (typeof caseSensitive !== 'boolean') { throw new TypeError(`The "caseSensitive" property of the "options" object (when provided) must be a boolean, but instead got ${typeof caseSensitive}`) }
-            }
-
-            return configs;
+            return { ...configs, ...pathConfigs };
         },
         checkIfClearing: (operation: 'get' | 'set' | 'touch' | 'remove' | 'read' | 'has', key: string) => {
             if (this.#_flags.blocking.clearing) { throw new Error(`Cannot ${operation} (${key}) while clearing`) }
@@ -337,8 +356,7 @@ class FileCacheManager {
             const configs = this.#_helpers.parseFileOptions(options);
             this.#_helpers.checkIfClearing('remove', configs.key);
 
-            const scopeMap = this.#_helpers.records.getScopeMap(configs.scope);
-            const record = scopeMap.get(configs.key, { caseSensitive: configs.caseSensitive });
+            const record = this.#_helpers.records.getRecord(configs);
             if (!record) { return undefined }
 
             const response = await record.read();
@@ -366,8 +384,7 @@ class FileCacheManager {
             const configs = this.#_helpers.parseFileOptions(options);
             this.#_helpers.checkIfClearing('remove', configs.key);
 
-            const scopeMap = this.#_helpers.records.getScopeMap(configs.scope);
-            const record = scopeMap.get(configs.key, { caseSensitive: configs.caseSensitive });
+            const record = this.#_helpers.records.getRecord(configs);
             if (!record) { return undefined }
 
             return record.toJSON();
@@ -414,7 +431,7 @@ class FileCacheManager {
         this.#_helpers.checkIfClearing('remove', configs.key);
 
         const scopeMap = this.#_helpers.records.getScopeMap(configs.scope);
-        return scopeMap.has(configs.key, { caseSensitive: configs.caseSensitive });
+        return scopeMap.has(configs.key);
     }
 
     /**
@@ -588,4 +605,10 @@ class FileCacheManager {
 }
 
 export default FileCacheManager
-type FilesMainRecord = Map<string, RecordStore<string, FileCacheRecord>>;
+type FilesMainRecord = Map<string, Map<string, FileCacheRecord>>;
+type InternalIOConfigs = {
+    caseSensitive: boolean;
+    filePath: string;
+    scope: string;
+    key: string;
+}

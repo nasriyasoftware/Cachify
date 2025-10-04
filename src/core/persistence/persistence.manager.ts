@@ -20,7 +20,6 @@ class PersistenceManager {
      * drivers map, a new entry is created.
      *
      * @template D - The type of storage service.
-     * @param {DriverName} name - The name under which the adapter will be registered.
      * @param {D} service - The type of storage service to be added.
      * @param {PersistanceStorageServices[D]['configs']} configs - The configuration settings for the service.
      * @since v1.0.0

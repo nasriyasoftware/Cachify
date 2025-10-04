@@ -172,4 +172,36 @@ describe("Files Cache Manager Integration", () => {
         const readResult = await cachify.files.read({ filePath: filesPaths.test });
         expect(readResult!.content.toString()).toBe("Updated content");
     });
+
+    it("should inspect file record using case-insensitive lookup", async () => {
+        await cachify.files.set(filesPaths.test, { preload: true, initiator: "warmup" });
+
+        // Change the case of the file name intentionally
+        const mixedCasePath = path.join(testDir, "TESTFILE.TXT");
+
+        // Case-insensitive lookup
+        const recordInsensitive = cachify.files.inspect({ filePath: mixedCasePath, caseSensitive: false });
+        expect(recordInsensitive).toBeDefined();
+        expect(recordInsensitive?.file.name.toLowerCase()).toBe("testfile.txt");
+
+        // Case-sensitive lookup (should fail)
+        const recordSensitive = cachify.files.inspect({ filePath: mixedCasePath, caseSensitive: true });
+        expect(recordSensitive).toBeUndefined();
+    });
+
+    it("should read cached file using case-insensitive lookup", async () => {
+        await cachify.files.set(filesPaths.test, { preload: true, initiator: "warmup" });
+
+        const upperCasePath = path.join(testDir, "TESTFILE.TXT");
+
+        // Read using case-insensitive path
+        const readInsensitive = await cachify.files.read({ filePath: upperCasePath, caseSensitive: false });
+        expect(readInsensitive?.status).toBe("hit");
+        expect(readInsensitive?.content.toString()).toBe("Updated content");
+
+        // Read using case-sensitive path (should trigger miss)
+        const readSensitive = await cachify.files.read({ filePath: upperCasePath, caseSensitive: true });
+        expect(readSensitive).toBeUndefined();
+    });
+
 });

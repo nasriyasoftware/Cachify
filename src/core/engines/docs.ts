@@ -1,8 +1,7 @@
-import RecordStore from "../../utils/RecordStore";
 import { CacheFlavor, CacheRecord } from "../docs/docs";
 
 export type EngineStorageRecord<E> = {
-    [flavor in CacheFlavor]: Map<string, RecordStore<string, E>>;
+    [flavor in CacheFlavor]: Map<string, Map<string, E>>;
 };
 
 export interface StorageEngineHandlers<E> {

@@ -127,6 +127,12 @@ export interface FilePathOptions extends FileBaseOptions {
      * cachify.files.read({ filePath: '/path/to/file' });
      */
     filePath: string;
+
+    /**
+     * Whether to perform a case-sensitive search.
+     * @default true
+     */
+    caseSensitive?: boolean;
 }
 
 export interface FileKeyOptions extends FileBaseOptions {
@@ -136,12 +142,6 @@ export interface FileKeyOptions extends FileBaseOptions {
      * cachify.files.read({ key: 'custom_key' });
      */
     key: string;
-
-    /**
-     * Whether to perform a case-sensitive search.
-     * @default true
-     */
-    caseSensitive?: boolean;
 }
 
 export type FileOptions = FilePathOptions | FileKeyOptions

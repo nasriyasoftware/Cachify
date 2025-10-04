@@ -7,7 +7,6 @@ import KVCacheRecord from "./kv/record";
 import FileCacheRecord from "./files/file";
 import { FileEventsManager } from "../events/managers/file/FileEventsManager";
 import { KVEventsManager } from "../events/managers/kv/KVEventsManager";
-import RecordStore from "../../utils/RecordStore";
 
 class CacheHelpers {
     estimateValueSize(value: unknown, seen = new WeakSet()): number {
@@ -58,7 +57,7 @@ class CacheHelpers {
     }
 
     readonly records = {
-        getScopeMap: <T extends CacheRecord>(scope: string, map: Map<string, RecordStore<string, T>>) => {
+        getScopeMap: <T extends CacheRecord>(scope: string, map: Map<string, Map<string, T>>) => {
             if (!map.has(scope)) { map.set(scope, new Map()) }
             return map.get(scope)!;
         },

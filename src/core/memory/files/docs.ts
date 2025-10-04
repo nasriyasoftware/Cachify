@@ -1,7 +1,6 @@
 import FileCacheRecord from "./file";
 import type { Prettify, RequiredStrict } from "@nasriya/atomix";
 import type { TTLFileOptions } from "../../configs/strategies/ttl/TTLConfig";
-import type { Stats } from "fs";
 
 type FileTypeMap = {
     options: {
@@ -137,9 +136,15 @@ export interface FileKeyOptions extends FileBaseOptions {
      * cachify.files.read({ key: 'custom_key' });
      */
     key: string;
+
+    /**
+     * Whether to perform a case-sensitive search.
+     * @default true
+     */
+    caseSensitive?: boolean;
 }
 
-export type FileOptions = FilePathOptions | FileKeyOptions;
+export type FileOptions = FilePathOptions | FileKeyOptions
 
 export interface FileCacheReadResponse {
     /**

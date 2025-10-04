@@ -1,5 +1,6 @@
 import { EngineStorageContext, EngineStorageRecord, StorageEngineHandlers } from "./docs";
 import { CacheRecord } from "../docs/docs";
+import RecordStore from "../../utils/RecordStore";
 
 class StorageEngine<StorageEntry> {
     readonly #_storage: EngineStorageRecord<StorageEntry> = {} as any;
@@ -25,7 +26,7 @@ class StorageEngine<StorageEntry> {
                 if (flavorMap.has(scope)) {
                     return flavorMap.get(scope)!;
                 } else {
-                    const scopedMap = new Map<string, StorageEntry>();
+                    const scopedMap = new RecordStore<string, StorageEntry>();
                     flavorMap.set(scope, scopedMap);
                     return scopedMap;
                 }

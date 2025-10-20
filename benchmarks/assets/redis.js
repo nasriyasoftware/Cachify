@@ -1,5 +1,5 @@
 import { createClient as createRedisClient } from '@redis/client';
-import cachify from '../../../src/cachify';
+import cachify from '../../src/cachify';
 
 if (process.env.REDIS_BENCHMARK_URL) {
     const redisClient = createRedisClient({ url: process.env.REDIS_BENCHMARK_URL });

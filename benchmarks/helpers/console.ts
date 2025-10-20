@@ -1,8 +1,8 @@
 import path from "path";
 import fs from 'fs';
 import { Brand, Prettify } from "@nasriya/atomix";
-import { getSystemInfo } from "./helpers";
-import { LINE_LENGTH } from "../setup";
+import { getSystemInfo } from "../TS/assets/helpers";
+import { LINE_LENGTH } from "../TS/setup";
 
 const systemInfo = getSystemInfo();
 const userformatting = {
@@ -91,8 +91,14 @@ export class ConsoleX {
     readonly #_helpers = {
         parseFormatting: (str: string): string => {
             return str.replace(/<:reset>/g, ConsoleX.#_formatting.reset)
-                .replace(/<:color:(\w+)>/g, (match, color) => ConsoleX.#_formatting.colors[color])
-                .replace(/<:style:(\w+)>/g, (match, style) => ConsoleX.#_formatting.style[style]);
+                .replace(/<:color:(\w+)>/g, (match, c) => {
+                    const color = c as keyof ConsoleFormatting['colors'];
+                    return ConsoleX.#_formatting.colors[color]
+                })
+                .replace(/<:style:(\w+)>/g, (match, s) => {
+                    const style = s as keyof ConsoleFormatting['style'];
+                    return ConsoleX.#_formatting.style[style]
+                });
         },
         addContent: (str: string) => {
             str = str.replace(/\x1b\[[0-9;]*m/g, '');

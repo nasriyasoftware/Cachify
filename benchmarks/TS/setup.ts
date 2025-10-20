@@ -1,4 +1,4 @@
-import './assets/redis';
+import '../assets/redis';
 import path from 'path';
 import os from 'os';
 import { Brand } from '@nasriya/atomix';

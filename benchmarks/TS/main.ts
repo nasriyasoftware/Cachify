@@ -1,7 +1,7 @@
 './setup';
 import helpers, { consoleX } from './assets/helpers';
 import path from 'path';
-import ansiLogo from './assets/logo';
+import ansiLogo from '../assets/logo'
 import { TasksQueue } from '@nasriya/atomix/tools';
 
 // Import metas

@@ -3,7 +3,7 @@ import { consoleX, generateTestAction } from "../../assets/helpers";
 import { BenchmarkName, BenchMeta, StageName, StagePromisePayload, TestReturnType } from "../../setup";
 
 export async function setup() {
-    cachify.kv.configs.eviction.maxRecords = Infinity;
+    cachify.kvs.configs.eviction.maxRecords = Infinity;
 }
 
 export async function bench_core(records: number, storeIn: ('memory' | 'redis')[]) {
@@ -28,7 +28,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
                         endTime: 0,
                     }
 
-                    cachify.kv.set(`key-${encodedStoreInKey}-${i}`, `value-${encodedStoreInValue}-${i}`, { storeIn: storeIn }).then(() => {
+                    cachify.kvs.set(`key-${encodedStoreInKey}-${i}`, `value-${encodedStoreInValue}-${i}`, { storeIn: storeIn }).then(() => {
                         response.endTime = Date.now();
                         resolve(response);
                     }).catch((err) => {
@@ -43,7 +43,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
         consoleX.timeEnd('creaet_set_promises');
 
         consoleX.time({ id: 'execute_set_promises', title: `${TAG} Setting values...`, tag: 'SET' });
-        results.tests['set'] = await Promise.allSettled(setPromises);
+        results.tests['set' as StageName] = await Promise.allSettled(setPromises);
         consoleX.timeEnd('execute_set_promises');
     }
 
@@ -60,7 +60,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
                         endTime: 0,
                     }
 
-                    cachify.kv.get(`key-${encodedStoreInKey}-${i}`).then(() => {
+                    cachify.kvs.get(`key-${encodedStoreInKey}-${i}`).then(() => {
                         response.endTime = Date.now();
                         resolve(response);
                     }).catch((err) => {
@@ -75,7 +75,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
         consoleX.timeEnd('creaet_get_promises');
 
         consoleX.time({ id: 'execute_get_promises', title: `${TAG} Getting values...`, tag: 'GET' });
-        results.tests['read'] = await Promise.allSettled(getPromises);
+        results.tests['read' as StageName] = await Promise.allSettled(getPromises);
         consoleX.timeEnd('execute_get_promises');
     }
 
@@ -110,10 +110,10 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'kv_memory');
                     return test(recordsCount, ['memory']);
                 },
-                onResolve: (res) => {
+                onResolve: (res: unknown) => {
                     results['memory'] = res;
                 },
-                onReject: (error) => {
+                onReject: (error: Error) => {
                     console.error(error);
                 },
                 onDone: async () => {
@@ -132,10 +132,10 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'kv_redis');
                     return test(recordsCount, ['redis']);
                 },
-                onResolve: (res) => {
+                onResolve: (res: unknown) => {
                     results['redis'] = res;
                 },
-                onReject: (error) => {
+                onReject: (error: Error) => {
                     console.error(error);
                 },
                 onDone: async () => {
@@ -154,10 +154,10 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'kv_redis_memory');
                     return test(recordsCount, ['memory', 'redis']);
                 },
-                onResolve: (res) => {
+                onResolve: (res: unknown) => {
                     results['hybrid'] = res;
                 },
-                onReject: (error) => {
+                onReject: (error: Error) => {
                     console.error(error);
                 },
                 onDone: async () => {
@@ -187,7 +187,7 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
 
 async function globalOnDone() {
     consoleX.log(`[KV] Cache Stats:`, { logToConsole: false });
-    consoleX.dir(cachify.kv.stats, { logToConsole: false });
+    consoleX.dir(cachify.kvs.stats, { logToConsole: false });
     consoleX.predefined.diver('-', { logToConsole: false });
     consoleX.log('');
     await cachify.clear();

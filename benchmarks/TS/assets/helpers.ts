@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { BenchmarkName, BenchmarkStage, BenchmarkStats, MainBenchmarkAnalytics, MainBenchmarkResults, StageName, StagePromisePayload, TEST_DIR, TestReturnAnalytics, TestReturnType } from "../setup";
-import ConsoleX from "./console";
+import ConsoleX from '../../helpers/console'
 
 const configs = getConfig();
 export const consoleX = new ConsoleX({

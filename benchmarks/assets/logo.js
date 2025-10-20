@@ -1,5 +1,5 @@
 const big =
-`
+    `
                                                                                                                  %%%%%%%%%% 
                                                                              +++++                              %%#++++++#%%
 +++++        +++++                                                           +++++                               ++*%%%%*++ 
@@ -18,10 +18,10 @@ const big =
                                                                                          +++++                        
                                                                                         +++++                         
                                                                                        +++++                                
-` as const;
+`;
 
-const medium = 
-`
+const medium =
+    `
                                                       +++                     ########
 +++      +++                                         +++++                    +++##++ 
 +++++    +++                                          +++                       #++#  
@@ -34,7 +34,7 @@ const medium =
 +++      +++            ###      +++++     ###        ###       +++                ###
                                                               ++++                   
                                                              ++++                                                           
-`    
+`
 
 const ansiLogo = { big, medium };
 export default ansiLogo;

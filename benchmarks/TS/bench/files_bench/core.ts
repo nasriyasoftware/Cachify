@@ -3,7 +3,7 @@ import path from 'path';
 import cachify from "../../../../src/cachify";
 import helpers, { consoleX, generateTestAction } from "../../assets/helpers";
 import { BenchmarkName, BenchMeta, StageName, StagePromisePayload, TEST_DIR, TestReturnType, FILE_CONTENT } from "../../setup";
-import filesystem from '../../../../src/core/memory/files/filesystem';
+import filesystem from '../../../../src/core/flavors/files/filesystem';
 
 const locals = Object.freeze({
     TEST_FILE_PATH: path.join(TEST_DIR, 'cachify-benchmark.txt'),
@@ -59,7 +59,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
     consoleX.timeEnd('create_set_file_promises');
 
     consoleX.time({ id: 'execute_set_file_promises', title: `${TAG} Writing files...`, tag: 'SET' });
-    results.tests['set'] = await Promise.allSettled(setPromises);
+    results.tests['set' as StageName] = await Promise.allSettled(setPromises);
     consoleX.timeEnd('execute_set_file_promises');
 
 
@@ -92,7 +92,7 @@ export async function bench_core(records: number, storeIn: ('memory' | 'redis')[
 
         consoleX.time({ id: `execute_get_file_${state}_promises`, title: `${TAG} Reading files...`, tag: 'GET' });
         const res = await Promise.allSettled(getPromises);
-        results.tests[`${state}_read`] = res;
+        results.tests[`${state}_read` as StageName] = res;
         consoleX.timeEnd(`execute_get_file_${state}_promises`);
     }
 
@@ -129,8 +129,8 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'files_memory');
                     return test(recordsCount, ['memory']);
                 },
-                onResolve: (res) => { results['memory'] = res },
-                onReject: (err) => console.error(err),
+                onResolve: (res: unknown) => { results['memory'] = res },
+                onReject: (err: Error) => console.error(err),
                 onDone: async () => { await globalFilesOnDone(); }
             },
             add() { tasks.push(this.meta); results['memory'] = {}; }
@@ -142,8 +142,8 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'files_redis');
                     return test(recordsCount, ['redis']);
                 },
-                onResolve: (res) => { results['redis'] = res },
-                onReject: (err) => console.error(err),
+                onResolve: (res: unknown) => { results['redis'] = res },
+                onReject: (err: Error) => console.error(err),
                 onDone: async () => { await globalFilesOnDone(); }
             },
             add() { tasks.push(this.meta); results['redis'] = {}; }
@@ -155,8 +155,8 @@ export function getBenchmarkMeta(recordsCount: number): BenchMeta {
                     const test = generateTestAction(benchmark, 'files_memory_redis');
                     return test(recordsCount, ['memory', 'redis']);
                 },
-                onResolve: (res) => { results['hybrid'] = res },
-                onReject: (err) => console.error(err),
+                onResolve: (res: unknown) => { results['hybrid'] = res },
+                onReject: (err: Error) => console.error(err),
                 onDone: async () => { await globalFilesOnDone(); }
             },
             add() { tasks.push(this.meta); results['hybrid'] = {}; }

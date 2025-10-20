@@ -10,7 +10,7 @@ abstract class CacheConfig<F extends CacheFlavor> {
     readonly #_idle: IdleConfig;
 
     constructor(updateStatus: CacheStatusChangeHandler, flavor: F) {
-        this.#_ttl = new TTLConfig(updateStatus, { flavor, value: 300_000 });
+        this.#_ttl = new TTLConfig(updateStatus, { value: 300_000 }, flavor);
         this.#_eviction = new EvictConfig(updateStatus);
         this.#_idle = new IdleConfig(updateStatus);
     }

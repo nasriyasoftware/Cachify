@@ -1,13 +1,17 @@
 import cachify from "../../cachify";
 import atomix from "@nasriya/atomix";
 import constants from "../consts/consts";
-import persistenceManager from "./persistence.manager";
 import type { CacheFlavor } from "../docs/docs";
 import type { ProxyBackupParameters, ProxyRestoreParameters, StorageServices } from "./docs";
+import PersistenceManager from "./persistence.manager";
 
 const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
 
 class PersistenceProxy {
+    readonly #_manager: PersistenceManager;
+
+    constructor(manager: PersistenceManager) { this.#_manager = manager }
+    
     readonly #_helpers = {
         validate: {
             backupData: (data: unknown) => {
@@ -44,10 +48,10 @@ class PersistenceProxy {
         this.#_helpers.validate.backupData(data);
         this.#_helpers.validate.service(to);
 
-        const driver = persistenceManager.getDriver(to);
+        const driver = this.#_manager.getDriver(to);
         if (!driver) { throw new Error(`The provided storage service (${to}) is not implemented.`) }
 
-        const backupStream = persistenceManager.createBackupStream();
+        const backupStream = this.#_manager.createBackupStream();
 
         // Pass the stream to the backup() BEFORE writing data
         const backupPromise = driver.backup(
@@ -80,7 +84,7 @@ class PersistenceProxy {
         const [flavor, from, ...rest] = args;
         this.#_helpers.validate.service(from);
 
-        const driver = persistenceManager.getDriver<S>(from);
+        const driver = this.#_manager.getDriver<S>(from);
         if (!driver) { throw new Error(`The provided storage service (${from}) is not implemented.`) }
 
         // @ts-ignore - backup method signature is safe for the given storage type `S`
@@ -88,5 +92,4 @@ class PersistenceProxy {
     }
 }
 
-const persistenceProxy = new PersistenceProxy();
-export default persistenceProxy;
+export default PersistenceProxy;

@@ -4,13 +4,17 @@ import RestoreStream from "./helpers/RestoreStream";
 import PersistanceService from "./PersistanceService";
 
 // Drivers
-import LocalStorageDriver from "../../persistence/local/local.driver";
-import S3StorageDriver from "../../persistence/s3/s3.driver";
+import LocalStorageDriver from "../../api/persistence/local/local.driver";
+import S3StorageDriver from "../../api/persistence/s3/s3.driver";
+import CachifyClient from "../../client";
 
 type Drivers<K extends StorageServices = StorageServices> = Map<K, PersistanceService<K>>
 
 class PersistenceManager {
+    readonly #_client: CachifyClient;
     readonly #_drivers: Drivers = new Map();
+
+    constructor(client: CachifyClient) { this.#_client = client }
 
     /**
      * Adds a new adapter to the storage drivers manager.
@@ -31,10 +35,10 @@ class PersistenceManager {
         const serviceInstance = (() => {
             switch (service) {
                 case 'local':
-                    return new LocalStorageDriver(configs as PersistanceStorageServices['local']['configs']);
+                    return new LocalStorageDriver(this, configs as PersistanceStorageServices['local']['configs']);
 
                 case 's3':
-                    return new S3StorageDriver(configs as PersistanceStorageServices['s3']['configs']);
+                    return new S3StorageDriver(this, configs as PersistanceStorageServices['s3']['configs']);
 
                 default:
                     throw new Error(`Unknown or unsupported persistence service: ${service}`);
@@ -85,19 +89,17 @@ class PersistenceManager {
     }
 
     /**
-     * Creates and initializes a new restore stream.
      *
-     * This method initializes a new instance of `RestoreStream`, which is used
-     * to restore data from a readable stream source. The restore stream handles
-     * decryption, parsing, and processing of the incoming data.
+     * This method initializes a new instance of `RestoreStream`, using the
+     * associated `CachifyClient` instance to set records, and returns the
+     * instance.
      *
      * @returns An initialized `RestoreStream` instance.
      * @since v1.0.0
-     */
+    */
     createRestoreStream(): RestoreStream {
-        return new RestoreStream();
+        return new RestoreStream(this.#_client);
     }
 }
 
-const persistenceManager = new PersistenceManager();
-export default persistenceManager;
+export default PersistenceManager;

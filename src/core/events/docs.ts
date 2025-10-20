@@ -1,14 +1,14 @@
-import FileCacheRecord from "../memory/files/file";
+import FileCacheRecord from "../flavors/files/files.record";
 import { EvictionMode } from "../configs/strategies/evict/EvictConfig";
-import { CacheFlavor, CacheRecord, RefreshableCacheRecord } from "../docs/docs";
-import KVCacheRecord from "../memory/kv/record";
-import { KVRemovalReason } from "./managers/kv/docs";
-import { FileRemovalReason } from "./managers/file/docs";
+import { CacheFlavor, CacheMetaData, CacheRecord, RefreshableCacheRecord } from "../docs/docs";
+import KVCacheRecord from "../flavors/kvs/kvs.record";
+import { KVRemovalReason } from "./managers/kvs/docs";
+import { FileRemovalReason } from "./managers/files/docs";
 
-import kvEventsManager from "./managers/kv/KVEventsManager";
-import fileEventsManager from "./managers/file/FileEventsManager";
+import KVsEventsManager from "./managers/kvs/KVsEventsManager";
+import FilesEventsManager from "./managers/files/FilesEventsManager";
 
-export type EventsManager = typeof kvEventsManager | typeof fileEventsManager // | typeof databaseEventsManager // TODO: Enable when the database cache is implemented
+export type EventsManager = KVsEventsManager | FilesEventsManager // | databaseEventsManager // TODO: Enable when the database cache is implemented
 
 export interface CacheEvents<T extends CacheRecord = CacheRecord> {
     create: { payload: CreateEvent<T>, type: 'create' };
@@ -109,4 +109,10 @@ export interface FileContentSizeChangeEvent extends BaseCacheEvent<FileCacheReco
     item: FileCacheRecordJSON;
     type: 'fileContentSizeChange';
     delta: number;
+}
+
+export type EventsManagers = {
+    kvs: KVsEventsManager;
+    files: FilesEventsManager;
+    // database: typeof databaseEventsManager; // TODO: Enable when the database cache is implemented
 }

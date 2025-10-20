@@ -12,5 +12,9 @@
         "tsx",
         "jsx",
         "node"
+    ],
+    "setupFilesAfterEnv": [
+        "<rootDir>/tests/setup/jest.loadEnv.ts",
+        "<rootDir>/tests/setup/jest.redis.ts"
     ]
 }

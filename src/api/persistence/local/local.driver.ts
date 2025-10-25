@@ -13,6 +13,12 @@ function getFilePath(fileName: string, configs: Configs) {
     return path.resolve((configs.path || process.cwd()), 'cachify', 'backups', fileName);
 }
 
+/**
+ * Validate a backup file name and throw an error when it is not acceptable.
+ *
+ * @param name - The candidate backup file name to validate
+ * @throws Error - if `name` is not a non-empty string, equals `.` or `..`, contains slashes or backslashes, contains illegal/control characters (`< > : " / \ | ? *` or control chars), or contains `..` sequences (relative path traversal)
+ */
 function assertValidBackupFileName(name: string): void {
     try {
         if (typeof name !== 'string' || !name.trim()) {

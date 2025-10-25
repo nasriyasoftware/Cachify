@@ -3,14 +3,12 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Loads the environment variables from the specified file.
- * If the file is not a file, it will look for a .env file in the same directory.
- * If the .env file does not exist, it will throw an error.
- * If overwrite is true, it will overwrite existing environment variables.
- * @param src The path to the file
- * @param options The options for loading the environment variables
- * @param options.overwrite Whether to overwrite existing environment variables
- * @returns A promise that resolves when the environment variables have been loaded
+ * Load environment variables from a file or from a directory's `.env` file into `process.env`.
+ *
+ * @param src - Path to a file or directory to load environment variables from
+ * @param options.overwrite - If true, existing environment variables will be replaced
+ * @param options.mustExist - If true and the resolved source does not exist, an error is thrown
+ * @returns Nothing
  */
 export async function loadEnv(src: string, options?: { overwrite?: boolean, mustExist?: boolean }) {
     const overwrite = typeof options?.overwrite === 'boolean' ? options.overwrite : false;
@@ -50,6 +48,19 @@ export async function loadEnv(src: string, options?: { overwrite?: boolean, must
     });
 }
 
+/**
+ * Load environment variables from a file or a directory's `.env` into `process.env` synchronously.
+ *
+ * Reads the given path; if it is a file that file is used, otherwise `<src>/.env` is used.
+ * Lines that are empty or start with `#` are ignored. Each `KEY=VALUE` line sets `process.env[KEY]`
+ * unless `process.env[KEY]` is already defined and `options.overwrite` is not `true`.
+ *
+ * @param src - Path to a file or directory containing the environment entries
+ * @param options - Optional behavior flags
+ * @param options.overwrite - If `true`, existing `process.env` values will be replaced (default `false`)
+ * @param options.mustExist - If `true`, throw an error when `src` does not exist (default `false`)
+ * @throws Error when `src` does not exist and `options.mustExist` is `true`
+ */
 export function loadEnvSync(src: string, options?: { overwrite?: boolean, mustExist?: boolean }) {
     const overwrite = typeof options?.overwrite === 'boolean' ? options.overwrite : false;
     const mustExist = typeof options?.mustExist === 'boolean' ? options.mustExist : false;

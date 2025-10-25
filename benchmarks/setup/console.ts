@@ -1,10 +1,8 @@
 import path from "path";
 import fs from 'fs';
-import { Brand, Prettify } from "@nasriya/atomix";
-import { getSystemInfo } from "../TS/assets/helpers";
-import { LINE_LENGTH } from "../TS/setup";
+import globalConfigs from "./configs";
+import type { Brand, Prettify } from "@nasriya/atomix";
 
-const systemInfo = getSystemInfo();
 const userformatting = {
     reset: `<:reset>`,
     colors: {
@@ -138,6 +136,7 @@ export class ConsoleX {
             this.#_data.out.storeJSON = outOptions.storeJSON || false;
             this.#_data.out.storeOutput = outOptions.storeOutput || false;
             this.#_data.out.dir = outOptions.outDir || process.cwd();
+            if (!fs.existsSync(this.#_data.out.dir)) { fs.mkdirSync(this.#_data.out.dir, { recursive: true }); }
         }
     }
 
@@ -148,7 +147,7 @@ export class ConsoleX {
                 logToConsole: options?.logToConsole ?? true
             };
 
-            const lineLength = Math.max(LINE_LENGTH, title.length + 4);
+            const lineLength = Math.max(globalConfigs.consts.lineHeight, title.length + 4);
             const totalPadding = lineLength - title.length - 2; // 2 spaces around the msg
             const leftPadding = Math.floor(totalPadding / 2);
             const rightPadding = totalPadding - leftPadding;
@@ -175,7 +174,7 @@ export class ConsoleX {
             }
 
             const systemColor = ConsoleX.#_formatting.colors[configs.colorCode];
-            const content = `${reset}${systemColor}${str.repeat(LINE_LENGTH)}${reset}`;
+            const content = `${reset}${systemColor}${str.repeat(globalConfigs.consts.lineHeight)}${reset}`;
             if (configs.logToFile) { this.#_helpers.addContent(content) }
             if (configs.logToConsole) { console.log(content) }
         },
@@ -189,14 +188,14 @@ export class ConsoleX {
             const { colors, style } = ConsoleX.#_formatting;
 
             const dataLines: string[] = [
-                `${colors.cyan}${style.bold}Hardware:${colors.reset} [${colors.yellow}${style.underline}CPU:${colors.reset} ${systemInfo.cpu.model.trim()} (${systemInfo.cpu.cores} cores)] | [${colors.yellow}${style.underline}RAM:${colors.reset} ${systemInfo.memory.total}]`,
-                `${colors.cyan}${style.bold}Software:${colors.reset} [${colors.yellow}${style.underline}CPU:${colors.reset} ${systemInfo.platform} (${systemInfo.arch})] | [${colors.yellow}${style.underline}OS:${colors.reset} ${systemInfo.release}]`
+                `${colors.cyan}${style.bold}Hardware:${colors.reset} [${colors.yellow}${style.underline}CPU:${colors.reset} ${globalConfigs.systemInfo.cpu.model.trim()} (${globalConfigs.systemInfo.cpu.cores} cores)] | [${colors.yellow}${style.underline}RAM:${colors.reset} ${globalConfigs.systemInfo.memory.total}]`,
+                `${colors.cyan}${style.bold}Software:${colors.reset} [${colors.yellow}${style.underline}CPU:${colors.reset} ${globalConfigs.systemInfo.platform} (${globalConfigs.systemInfo.arch})] | [${colors.yellow}${style.underline}OS:${colors.reset} ${globalConfigs.systemInfo.release}]`
             ];
 
             const visibleLengths = dataLines.map(line => line.replace(/\x1b\[[0-9;]*m/g, '').length);
             const LONGEST_LINE_LENGTH = Math.max(...visibleLengths);
             const MARGIN_LENGTH = 10;
-            const MAX_LINE_LENGTH = Math.max(LINE_LENGTH, (LONGEST_LINE_LENGTH + MARGIN_LENGTH));
+            const MAX_LINE_LENGTH = Math.max(globalConfigs.consts.lineHeight, (LONGEST_LINE_LENGTH + MARGIN_LENGTH));
 
 
             const totalPadding = MAX_LINE_LENGTH - LONGEST_LINE_LENGTH - 2; // 2 spaces around the msg
@@ -320,4 +319,10 @@ export class ConsoleX {
     }
 }
 
-export default ConsoleX;
+const consoleX = new ConsoleX({
+    storeJSON: true,
+    storeOutput: true,
+    outDir: globalConfigs.outDir
+});
+
+export default consoleX;

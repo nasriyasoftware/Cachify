@@ -1,17 +1,65 @@
-import { TTLExpirationHandler } from "./TTLConfig";
 import atomix from "@nasriya/atomix";
+import type { CacheFlavor } from "../../../docs/docs";
+import type { BaseTTLOptions, FlavorPolicyMap, TTLExpirationHandler } from "../docs";
 
-class TTLItemConfig {
+class TTLItemConfig<F extends CacheFlavor> {
+    readonly #_flavor: F;
     #_data = {
         value: 300_000,
+        policy: 'evict' as FlavorPolicyMap[F],
         onExpire: undefined as TTLExpirationHandler | undefined,
         sliding: true
     }
 
-    constructor(options: { value: number, onExpire?: TTLExpirationHandler, sliding?: boolean }) {
+    constructor(options: BaseTTLOptions<F>, flavor: F) {
+        this.#_flavor = flavor;
         this.#_data.value = options.value;
         if (typeof options.onExpire === 'function') { this.#_data.onExpire = options.onExpire }
         if (typeof options.sliding === 'boolean') { this.#_data.sliding = options.sliding }
+        if (typeof options.policy === 'string') { this.#_data.policy = options.policy }
+    }
+
+    /**
+     * Retrieves the policy for the cache's time-to-live (TTL).
+     * The policy determines the behavior of expired records.
+     * @returns {FlavorPolicyMap[F]} The policy for the cache's TTL.
+     * @since v1.0.0
+     */
+    get policy(): FlavorPolicyMap[F] { return this.#_data.policy }
+
+    /**
+     * Sets the policy for the cache's time-to-live (TTL).
+     * The policy determines the behavior of expired records.
+     * The following policies are available:
+     * - `evict`: When a record expires, it will be removed from the cache.
+     * - `keep`: When a record expires, it will remain in the cache until it is manually removed.
+     * - `refresh`: When a record expires, it will be removed from the cache and reloaded from the original source.
+     * @param {FlavorPolicyMap[F]} policy The policy for the cache's TTL.
+     * @throws {RangeError} If the provided policy is not a valid policy.
+     * @since v1.0.0
+     */
+    set policy(policy: FlavorPolicyMap[F]) {
+        if (!atomix.valueIs.validString(policy)) { throw new TypeError(`The provided policy (${policy}) is not a valid string.`) }
+        if (!['evict', 'keep', 'refresh'].includes(policy)) { throw new RangeError(`The provided policy (${policy}) is not a valid policy.`) }
+
+        switch (this.#_flavor) {
+            case 'kvs': {
+                if (!['keep', 'evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
+            }
+                break;
+
+            case 'files': {
+                if (!['keep', 'evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
+            }
+                break;
+
+            // case 'database': {
+            //     if (!['keep', 'evict', 'refresh'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
+            // }
+            //     break;
+        }
+
+        this.#_data.policy = policy;
     }
 
     /**

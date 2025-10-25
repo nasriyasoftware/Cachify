@@ -2,13 +2,13 @@ import atomix from "@nasriya/atomix";
 import CacheConfig from "../../strategies/CacheConfig";
 import { CacheStatusChangeHandler } from "../../strategies/docs";
 
-class KVCacheConfig extends CacheConfig<'kv'> {
+class KVCacheConfig extends CacheConfig<'kvs'> {
     readonly #_limits = {
         maxTotalSize: 1024 * 1024 * 1024,   // 1 GB
     }
 
     constructor(updateStatus: CacheStatusChangeHandler) {
-        super(updateStatus, 'kv');
+        super(updateStatus, 'kvs');
     }
 
     /**

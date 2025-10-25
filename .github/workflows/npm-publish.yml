@@ -9,7 +9,21 @@ jobs:
       id-token: write
       contents: write
 
-    runs-on: ubuntu-latest      
+    runs-on: ubuntu-latest
+
+     # Add Redis as a service
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --save ""   # optional: disable persistence in CI
+          --appendonly no
+
+    env:
+      REDIS_TEST_URL: redis://localhost:6379
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

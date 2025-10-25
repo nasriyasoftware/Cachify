@@ -4,17 +4,21 @@ import helpers from "./helpers";
 import DecryptStream from "./streams/DecryptStream";
 import StreamLinesParser from "./streams/StreamLinesParser";
 import restoreQueue from "./restoreQueue";
+import CachifyClient from "../../../client";
 
 type ErrorHandler = (err: Error) => void;
 
 class RestoreStream {
+    readonly #_client: CachifyClient;
     readonly #_streams;
     #_userErrorHandler: ErrorHandler | undefined;
     #_errorHandler = (err: Error) => {
         if (typeof this.#_userErrorHandler === 'function') { this.#_userErrorHandler(err) } else { throw err }
     };
 
-    constructor() {
+    constructor(client: CachifyClient) {
+        this.#_client = client;
+
         this.#_streams = Object.freeze({
             lineParser: new StreamLinesParser(),
             decryptor: (() => {
@@ -39,7 +43,7 @@ class RestoreStream {
 
                         const data = JSON.parse(recordData) as ExportedData;
 
-                        const setAction = helpers.setRecord(data);
+                        const setAction = helpers.setRecord(data, this.#_client);
                         if (!setAction) { return cb() } // It means the record is expired
 
                         restoreQueue.addTask({

@@ -43,7 +43,7 @@ export const CACHE_PRELOAD_INITIATORS = ['warmup', 'restore'] as const;
  * @constant
  * @since 1.0.0
  */
-export const CACHE_FLAVORS: CacheFlavor[] = ['kv', 'files', /*'database'*/] as const;
+export const CACHE_FLAVORS: CacheFlavor[] = ['kvs', 'files', /*'database'*/] as const;
 
 const constants = {
     OBJECT_OVERHEAD,

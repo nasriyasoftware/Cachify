@@ -1,5 +1,5 @@
 import atomix from "@nasriya/atomix";
-import { CacheStatusChangeHandler } from "../docs";
+import { BaseTTLOptions, CacheStatusChangeHandler, FlavorPolicyMap, TTLExpirationHandler } from "../docs";
 import { CacheFlavor, CacheRecord } from "../../../docs/docs";
 
 class TTLConfig<F extends CacheFlavor> {
@@ -13,9 +13,9 @@ class TTLConfig<F extends CacheFlavor> {
         sliding: true
     }
 
-    constructor(updateStatus: CacheStatusChangeHandler, options: BaseTTLOptions<F>) {
+    constructor(updateStatus: CacheStatusChangeHandler, options: BaseTTLOptions<F>, flavor: F) {
         this.#_updateStatus = updateStatus;
-        this.#_flavor = options.flavor;
+        this.#_flavor = flavor;
 
         if (atomix.dataTypes.record.hasOwnProperty(options, 'value')) {
             const ttl = options.value;
@@ -130,11 +130,12 @@ class TTLConfig<F extends CacheFlavor> {
      * @since v1.0.0
      */
     set policy(policy: FlavorPolicyMap[F]) {
+        if (!atomix.valueIs.validString(policy)) { throw new TypeError(`The provided policy (${policy}) is not a valid string.`) }
         if (!['evict', 'keep', 'refresh'].includes(policy)) { throw new RangeError(`The provided policy (${policy}) is not a valid policy.`) }
 
         switch (this.#_flavor) {
-            case 'kv': {
-                if (!['keep', 'evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
+            case 'kvs': {
+                if (!['evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
             }
                 break;
 
@@ -142,7 +143,7 @@ class TTLConfig<F extends CacheFlavor> {
                 if (!['keep', 'evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
             }
                 break;
-            
+
             // case 'database': {
             //     if (!['keep', 'evict', 'refresh'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
             // }
@@ -175,33 +176,3 @@ class TTLConfig<F extends CacheFlavor> {
 }
 
 export default TTLConfig;
-
-export type TTLExpirationHandler = (record: CacheRecord) => void;
-export type TTLExpirationPolicy = 'evict' | 'refresh' | 'keep';
-
-type FlavorPolicyMap = {
-    kv: Extract<TTLExpirationPolicy, 'evict' | 'keep'>;                                              // kv records can't use any policy
-    files: Extract<TTLExpirationPolicy, 'evict' | 'keep'>;   // file supports only evict/keep
-    database: TTLExpirationPolicy;                          // full support (example)
-};
-
-interface BaseTTLOptions<F extends CacheFlavor> {
-    flavor: F;
-    enabled?: boolean;
-    /** The time-to-live (TTL) value in milliseconds. */
-    value: number;
-    /**
-     * Indicates whether the TTL should be reset when the record is accessed.
-     * If `sliding` is `true`, the record's TTL will be reset to the current time when it is accessed.
-     */
-    sliding?: boolean;
-    /** The policy to use when a record in the cache reaches its TTL. Defaults to `evict`. */
-    policy?: FlavorPolicyMap[F];
-    /** A handler that will be called when a record in the cache reaches its TTL. */
-    onExpire?: TTLExpirationHandler;
-}
-
-export type TTLKVOptions = BaseTTLOptions<'kv'>;
-export type TTLFileOptions = BaseTTLOptions<'files'>;
-// export type TTLDatabaseOptions = BaseTTLOptions<'database'>;
-export type TTLOptions = TTLKVOptions | TTLFileOptions //| TTLDatabaseOptions;

@@ -114,8 +114,8 @@ await isolated.kvs.set('1', 'value');
 await cachify.kvs.get('1'); // ❌ undefined — isolated from the other instance
 
 // Both share the same API surface, but only `cachify` includes utilities like:
-console.log(cachify.debug);        // Access global debug utilities
-console.log(cachify.create);       // Create new isolated clients
+console.log(cachify.debug);         // Access global debug utilities
+console.log(cachify.createClient);  // Create new isolated clients
 ```
 
 **Notes:**
@@ -194,7 +194,7 @@ const user = await cachify.kvs.get('1', 'users');
 console.log(user); // { name: 'Ahmad' }
 
 // Optional: store in multiple backends
-await cachify.kvs.set('2', { name: 'Omar' }, { scope: 'users', storeIn: ['memory', 'redis'] });
+await cachify.kvs.set('2', { name: 'Omar' }, { scope: 'users', storeIn: ['memory', 'redis-eu'] });
 const user2 = await cachify.kvs.get('2', 'users');
 console.log(user2); // { name: 'Omar' }
 

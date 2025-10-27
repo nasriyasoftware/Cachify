@@ -17,11 +17,11 @@ class PersistenceProxy {
 
                 if (atomix.dataTypes.record.hasOwnProperty(data, 'source')) {
                     const source = data.source;
-                    if (!atomix.valueIs.string(source)) { throw new TypeError(`The "source" property of the "data" object must be a string, but instead got ${typeof source}`) }
-                    if (!constants.CACHE_FLAVORS.includes(source as CacheFlavor)) { throw new RangeError(`The "source" property of the "data" object must be one of the following values: ${constants.CACHE_FLAVORS.join(', ')}`) }
+                    if (!atomix.valueIs.string(source)) { throw new TypeError(`The "initiator" property of the "data" object must be a string, but instead got ${typeof source}`) }
+                    if (!constants.CACHE_FLAVORS.includes(source as CacheFlavor)) { throw new RangeError(`The "initiator" property of the "data" object must be one of the following values: ${constants.CACHE_FLAVORS.join(', ')}`) }
                     if (!(source in cachify)) { throw new Error(`The cache flavor "${source}" is not implemented yet by cachify.`) }
                 } else {
-                    throw new SyntaxError(`The "source" property of the "data" object is required and missing.`);
+                    throw new SyntaxError(`The "initiator" property of the "data" object is required and missing.`);
                 }
 
                 if (atomix.dataTypes.record.hasOwnProperty(data, 'content')) {

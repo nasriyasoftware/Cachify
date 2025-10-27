@@ -69,8 +69,8 @@ class KVsCacheManager {
             this.#_events.on('remove', async event => {
                 const scopeMap = this.#_helpers.records.getScopeMap(event.item.scope);
                 const record = scopeMap.get(event.item.key)!;
-                await this.#_enginesProxy.remove(record);
                 this.#_memoryManager.handle.remove(record);
+                await this.#_enginesProxy.remove(record);
                 scopeMap.delete(event.item.key);
             }, { type: 'beforeAll' });
 
@@ -195,6 +195,7 @@ class KVsCacheManager {
                 scheduleEvictionCheck: atomix.utils.debounce(() => {
                     if (this.#_configs.eviction.enabled === false || this.#_queue.hasTask('eviction_check')) { return }
                     const task: BaseQueueTask = {
+                        id: 'eviction_check',
                         type: 'eviction_check',
                         action: async () => {
                             await helpers.cacheManagement.eviction.evictIfEnabled({
@@ -468,7 +469,7 @@ class KVsCacheManager {
                                 if (!atomix.valueIs.string(initiator)) { throw new TypeError(`The "initiator" property of the "options" object (when provided) must be a string, but instead got ${typeof initiator}`) }
                                 if (!constants.CACHE_PRELOAD_INITIATORS.includes(initiator as CachePreloadInitiator)) { throw new RangeError(`The "initiator" property of the "options" object (when provided) must be one of the following values: ${constants.CACHE_PRELOAD_INITIATORS.join(', ')}, but instead got "${initiator}".`) }
                             } else {
-                                throw new SyntaxError(`The "source" property of the "options" object (when provided) is required when "preload" is true`);
+                                throw new SyntaxError(`The "initiator" property of the "options" object (when provided) is required when "preload" is true`);
                             }
                         }
                     }

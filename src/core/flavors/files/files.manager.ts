@@ -593,7 +593,7 @@ class FilesCacheManager {
                                 if (!atomix.valueIs.string(initiator)) { throw new TypeError(`The "initiator" property of the "options" object (when provided) must be a string, but instead got ${typeof initiator}`) }
                                 if (!constants.CACHE_PRELOAD_INITIATORS.includes(initiator as CachePreloadInitiator)) { throw new RangeError(`The "initiator" property of the "options" object (when provided) must be one of the following values: ${constants.CACHE_PRELOAD_INITIATORS.join(', ')}, but instead got "${initiator}".`) }
                             } else {
-                                throw new SyntaxError(`The "source" property of the "options" object (when provided) is required when "preload" is true`);
+                                throw new SyntaxError(`The "initiator" property of the "options" object (when provided) is required when "preload" is true`);
                             }
                         }
                     }
@@ -733,7 +733,6 @@ class FilesCacheManager {
             if (!record) { return undefined }
 
             const response = await record.read();
-            await this.#_events.emit.read(record, { status: response.status });
             return response;
         } catch (error) {
             if (error instanceof TypeError) {

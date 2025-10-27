@@ -6,7 +6,7 @@ if (!redisUrl) {
     throw new Error("REDIS_TEST_URL is not defined in the environment.");
 }
 
-const redisClient = createClient({ url: process.env.REDIS_TEST_URL });
+const redisClient = createClient({ url: redisUrl });
 
 beforeAll(async () => {
     await redisClient.connect();

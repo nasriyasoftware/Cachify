@@ -30,7 +30,7 @@ const helpers = {
                 const value = (() => {
                     const delimiters = ['"', '`', '\''];
                     for (const delimiter of delimiters) {
-                        if (rawValue.startsWith(delimiter)) { return rawValue.slice(1, -1) };
+                        if (rawValue.startsWith(delimiter) && rawValue.endsWith(delimiter)) { return rawValue.slice(1, -1) };
                     };
 
                     return rawValue;
@@ -67,7 +67,7 @@ const helpers = {
 export async function loadEnv(src: string, options?: EnvReadOptions) {
     const configs = helpers.parseOptions(options);
 
-    // Check if the procided path exist
+    // Check if the provided path exist
     if (!fs.existsSync(src)) {
         if (configs.mustExist) { throw new Error(`The path of the environment file "${src}" does not exist.`) };
         return;
@@ -112,7 +112,7 @@ export async function loadEnv(src: string, options?: EnvReadOptions) {
 export function loadEnvSync(src: string, options?: { overwrite?: boolean, mustExist?: boolean }) {
     const configs = helpers.parseOptions(options);
 
-    // Check if the procided path exist
+    // Check if the provided path exist
     if (!fs.existsSync(src)) {
         if (configs.mustExist) { throw new Error(`The path of the environment file "${src}" does not exist.`) };
         return;

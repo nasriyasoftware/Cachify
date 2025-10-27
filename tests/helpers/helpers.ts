@@ -3,10 +3,10 @@ import overwatch from "@nasriya/overwatch";
 import cachify, { Cachify, CachifyClient } from "../../src";
 
 /**
- * Stop background services and clear caches for the test environment, optionally including additional clients.
+ * Shuts down test background services and clears caches, optionally including additional Cachify clients.
  *
  * Stops scheduled cron jobs, pauses overwatch, disposes global Cachify events, and clears the default cachify cache.
- * If `clients` is provided (a single client or an array), non-Cachify clients will have their events disposed and their caches cleared as well; any client that is an instance of `Cachify` is skipped.
+ * If `clients` is provided (a single client or an array), disposes each client's events and clears its cache, skipping any client that is an instance of `Cachify`.
  *
  * @param clients - Optional `CachifyClient` or array of `CachifyClient` to include in the cleanup
  */

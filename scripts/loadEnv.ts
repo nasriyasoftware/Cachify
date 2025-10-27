@@ -3,12 +3,11 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Load environment variables from a file or from a directory's `.env` file into `process.env`.
+ * Load environment variables from a file or from a directory's `.env` file into process.env.
  *
- * @param src - Path to a file or directory to load environment variables from
- * @param options.overwrite - If true, existing environment variables will be replaced
- * @param options.mustExist - If true and the resolved source does not exist, an error is thrown
- * @returns Nothing
+ * @param src - Path to a file or directory containing environment variables
+ * @param options.overwrite - If true, existing environment variables will be replaced; default is false
+ * @param options.mustExist - If true and the resolved source does not exist, an error is thrown; default is false
  */
 export async function loadEnv(src: string, options?: { overwrite?: boolean, mustExist?: boolean }) {
     const overwrite = typeof options?.overwrite === 'boolean' ? options.overwrite : false;

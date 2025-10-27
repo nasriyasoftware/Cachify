@@ -8,16 +8,27 @@ type BackupFunction = PersistanceStorageServices['local']['api']['private']['bac
 type RestoreFunction = PersistanceStorageServices['local']['api']['private']['restore'];
 type Configs = PersistanceStorageServices['local']['configs'];
 
+/**
+ * Resolve the absolute filesystem path for a backup file inside the cachify/backups directory.
+ *
+ * Validates the provided file name and resolves it against `configs.path` (or the current working directory)
+ * to produce an absolute path like `<base>/cachify/backups/<fileName>`.
+ *
+ * @param fileName - The backup file name to resolve; must be a valid backup file name
+ * @param configs - Local configuration object whose `path` property (if present) is used as the base directory
+ * @returns The absolute path to the backup file
+ * @throws If `fileName` is not a valid backup file name
+ */
 function getFilePath(fileName: string, configs: Configs) {
     assertValidBackupFileName(fileName);
     return path.resolve((configs.path || process.cwd()), 'cachify', 'backups', fileName);
 }
 
 /**
- * Validate a backup file name and throw an error when it is not acceptable.
+ * Validate a candidate backup file name and throw if it is invalid.
  *
  * @param name - The candidate backup file name to validate
- * @throws Error - if `name` is not a non-empty string, equals `.` or `..`, contains slashes or backslashes, contains illegal/control characters (`< > : " / \ | ? *` or control chars), or contains `..` sequences (relative path traversal)
+ * @throws Error - if `name` is not a non-empty string, equals `.` or `..`, contains slashes or backslashes, contains illegal/control characters (`< > : " / \ | ? *` or control chars 0x00–0x1F), or contains `..` sequences. The thrown error's message is prefixed with `Invalid backup file name: `.
  */
 function assertValidBackupFileName(name: string): void {
     try {

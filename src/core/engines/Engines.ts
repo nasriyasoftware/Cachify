@@ -12,17 +12,17 @@ class Engines {
         this.defineEngine<MemoryStorageEntry>('memory', {
             onSet: async (record, value, context) => {
                 const start = performance.now();
-                context.set(record.key, value);
+                context!.set(record.key, value);
                 const end = performance.now();
                 if (end - start > 10) {
                     console.warn(`[WARN] Slow SET: ${(end - start).toFixed(2)}ms`);
                 }
             },
             onRead: async (record, context): Promise<any> => {
-                return context.get(record.key);
+                return context!.get(record.key);
             },
             onRemove: async (record, context): Promise<void> => {
-                if (context.has(record.key)) { context.delete(record.key) }
+                if (context!.has(record.key)) { context!.delete(record.key) }
             }
         });
     }

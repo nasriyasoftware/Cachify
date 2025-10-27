@@ -18,7 +18,7 @@ import type { BlockingFlags, BlockingProcess, CacheFlavor, CacheManagerAssets, C
 import type { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import type { FileKeyOptions, FileNormalSetConfigs, FileNormalSetOptions, FileOptions, FilePathOptions, FilePreloadRestoreSetConfigs, FilePreloadRestoreSetOptions, FilePreloadSetConfigs, FilePreloadSetOptions, FilePreloadWarmupSetConfigs, FilePreloadWarmupSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
+const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
 class FilesCacheManager {
     readonly #_files: FilesMainRecord = new Map();
@@ -225,11 +225,10 @@ class FilesCacheManager {
             }
 
             if (!atomix.valueIs.record(options)) { throw new TypeError(`The "options" argument must be a record, but instead got ${typeof options}`) }
-            const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
-            const hasKey = hasOwnProperty(options, 'key');
-            const hasScope = hasOwnProperty(options, 'scope');
-            const hasFilePath = hasOwnProperty(options, 'filePath');
-            const hasCaseSensitive = hasOwnProperty(options, 'caseSensitive');
+            const hasKey = hasOwnProp(options, 'key');
+            const hasScope = hasOwnProp(options, 'scope');
+            const hasFilePath = hasOwnProp(options, 'filePath');
+            const hasCaseSensitive = hasOwnProp(options, 'caseSensitive');
 
             if (hasScope) {
                 const scope = options.scope;
@@ -304,19 +303,19 @@ class FilesCacheManager {
                     normalOptions: (key: string, options: FileNormalSetOptions, cacheConfigs: FilesCacheConfig) => {
                         const configs = this.#_helpers.setMethod.defaultConfigs(key, this.#_configs);
 
-                        if (hasOwnProperty(options, 'key')) {
+                        if (hasOwnProp(options, 'key')) {
                             if (!atomix.valueIs.string(options.key)) { throw new TypeError(`The "key" property of the "options" object (when provided) must be a string, but instead got ${typeof options.key}`) }
                             if (options.key.length === 0) { throw new RangeError(`The "key" property of the "options" object (when provided) must be a non-empty string`) }
                             configs.key = options.key;
                         }
 
-                        if (hasOwnProperty(options, 'scope')) {
+                        if (hasOwnProp(options, 'scope')) {
                             if (!atomix.valueIs.string(options.scope)) { throw new TypeError(`The "scope" property of the "options" object (when provided) must be a string, but instead got ${typeof options.scope}`) }
                             if (options.scope.length === 0) { throw new RangeError(`The "scope" property of the "options" object (when provided) must be a non-empty string`) }
                             configs.scope = options.scope;
                         }
 
-                        if (hasOwnProperty(options, 'storeIn')) {
+                        if (hasOwnProp(options, 'storeIn')) {
                             const isString = atomix.valueIs.string(options.storeIn);
                             const isArray = atomix.valueIs.array(options.storeIn);
 
@@ -342,7 +341,7 @@ class FilesCacheManager {
                             configs.storeIn = enginesInput;
                         }
 
-                        if (hasOwnProperty(options, 'ttl')) {
+                        if (hasOwnProp(options, 'ttl')) {
                             const ttl = options.ttl;
                             const isRecord = atomix.valueIs.record(ttl);
                             const isNumber = atomix.valueIs.number(ttl);
@@ -354,24 +353,24 @@ class FilesCacheManager {
                             }
 
                             if (isRecord) {
-                                if (hasOwnProperty(ttl, 'value')) {
+                                if (hasOwnProp(ttl, 'value')) {
                                     if (!atomix.valueIs.number(ttl.value)) { throw new TypeError(`The "value" property of the "ttl" object (when provided) must be a number, but instead got ${typeof ttl.value}`) }
                                     if (!atomix.valueIs.integer(ttl.value)) { throw new TypeError(`The "value" property of the "ttl" object (when provided) must be an integer, but instead got ${ttl.value}`) }
                                     (configs.ttl as TTLFileOptions).value = ttl.value;
                                 }
 
-                                if (hasOwnProperty(ttl, 'onExpire')) {
+                                if (hasOwnProp(ttl, 'onExpire')) {
                                     if (typeof ttl.onExpire !== 'function') { throw new TypeError(`The "onExpire" property of the "ttl" object (when provided) must be a function, but instead got ${typeof ttl.onExpire}`) }
                                     (configs.ttl as TTLFileOptions).onExpire = ttl.onExpire;
                                 }
 
-                                if (hasOwnProperty(ttl, 'policy')) {
+                                if (hasOwnProp(ttl, 'policy')) {
                                     if (!atomix.valueIs.string(ttl.policy)) { throw new TypeError(`The "policy" property of the "ttl" object (when provided) must be a string, but instead got ${typeof ttl.policy}`) }
                                     if (!['evict', 'keep'].includes(ttl.policy)) { throw new RangeError(`The "policy" property of the "ttl" object (when provided) must be either "evict" or "keep", but instead got ${ttl.policy}`) }
                                     configs.ttl.policy = ttl.policy ;
                                 }
 
-                                if (hasOwnProperty(ttl, 'sliding')) {
+                                if (hasOwnProp(ttl, 'sliding')) {
                                     if (typeof ttl.sliding !== 'boolean') { throw new TypeError(`The "sliding" property of the "ttl" object (when provided) must be a boolean, but instead got ${typeof ttl.sliding}`) }
                                     (configs.ttl as TTLFileOptions).sliding = ttl.sliding;
                                 }
@@ -396,7 +395,7 @@ class FilesCacheManager {
                         restore: (options: FilePreloadRestoreSetOptions, normalConfigs: FileNormalSetConfigs): FilePreloadRestoreSetConfigs => {
                             const { preload: _, ...rest } = normalConfigs;
                             for (const key in rest) {
-                                if (!hasOwnProperty(rest, key)) { throw new SyntaxError(`The preload restore options object must have a "${key}" property`) }
+                                if (!hasOwnProp(rest, key)) { throw new SyntaxError(`The preload restore options object must have a "${key}" property`) }
                             }
 
                             const configs: FilePreloadRestoreSetConfigs = {
@@ -430,31 +429,31 @@ class FilesCacheManager {
 
                             const assertPositiveInteger = utils.assert.type.positiveInteger;
 
-                            if (hasOwnProperty(options, 'stats')) {
+                            if (hasOwnProp(options, 'stats')) {
                                 if (!atomix.valueIs.record(options.stats)) { throw new TypeError(`The "stats" property of the "options" object (when provided) must be an object, but instead got ${typeof options.stats}`) }
 
-                                if (hasOwnProperty(options.stats, 'dates')) {
+                                if (hasOwnProp(options.stats, 'dates')) {
                                     const dates = options.stats.dates;
                                     if (!atomix.valueIs.record(dates)) { throw new TypeError(`The "dates" property of the "stats" object (when provided) must be an object, but instead got ${typeof dates}`) }
 
-                                    if (hasOwnProperty(dates, 'created')) {
+                                    if (hasOwnProp(dates, 'created')) {
                                         assertPositiveInteger(dates.created, 'created', 'stats.dates');
                                         configs.stats.dates.created = dates.created;
                                     } else {
                                         throw new SyntaxError(`The "created" property of the "dates" property of the "stats" object (when provided) is required when "preload" is true`)
                                     }
 
-                                    if (hasOwnProperty(dates, 'lastAccess')) {
+                                    if (hasOwnProp(dates, 'lastAccess')) {
                                         if (dates.lastAccess !== undefined) { assertPositiveInteger(dates.lastAccess, 'lastAccess', 'stats.dates') }
                                         configs.stats.dates.lastAccess = dates.lastAccess;
                                     }
 
-                                    if (hasOwnProperty(dates, 'lastUpdate')) {
+                                    if (hasOwnProp(dates, 'lastUpdate')) {
                                         if (dates.lastUpdate !== undefined) { assertPositiveInteger(dates.lastUpdate, 'lastUpdate', 'stats.dates') }
                                         configs.stats.dates.lastUpdate = dates.lastUpdate;
                                     }
 
-                                    if (hasOwnProperty(dates, 'expireAt')) {
+                                    if (hasOwnProp(dates, 'expireAt')) {
                                         if (dates.expireAt !== undefined) { assertPositiveInteger(dates.expireAt, 'expireAt', 'stats.dates') }
                                         configs.stats.dates.expireAt = dates.expireAt;
                                     }
@@ -462,39 +461,39 @@ class FilesCacheManager {
                                     throw new SyntaxError(`The "dates" property of the "stats" property of the "options" object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(options.stats, 'counts')) {
+                                if (hasOwnProp(options.stats, 'counts')) {
                                     const counts = options.stats.counts;
                                     if (!atomix.valueIs.record(counts)) { throw new TypeError(`The "counts" property of the "stats" object (when provided) must be an object, but instead got ${typeof counts}`) }
 
-                                    if (hasOwnProperty(counts, 'read')) {
+                                    if (hasOwnProp(counts, 'read')) {
                                         assertPositiveInteger(counts.read, 'read', 'stats.counts');
                                         configs.stats.counts.read = counts.read;
                                     } else {
                                         throw new SyntaxError(`The "read" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'update')) {
+                                    if (hasOwnProp(counts, 'update')) {
                                         assertPositiveInteger(counts.update, 'update', 'stats.counts');
                                         configs.stats.counts.update = counts.update;
                                     } else {
                                         throw new SyntaxError(`The "update" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'touch')) {
+                                    if (hasOwnProp(counts, 'touch')) {
                                         assertPositiveInteger(counts.touch, 'touch', 'stats.counts');
                                         configs.stats.counts.touch = counts.touch;
                                     } else {
                                         throw new SyntaxError(`The "touch" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'hit')) {
+                                    if (hasOwnProp(counts, 'hit')) {
                                         assertPositiveInteger(counts.hit, 'hit', 'stats.counts');
                                         configs.stats.counts.hit = counts.hit;
                                     } else {
                                         throw new SyntaxError(`The "hit" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'miss')) {
+                                    if (hasOwnProp(counts, 'miss')) {
                                         assertPositiveInteger(counts.miss, 'miss', 'stats.counts');
                                         configs.stats.counts.miss = counts.miss;
                                     } else {
@@ -507,39 +506,39 @@ class FilesCacheManager {
                                 throw new SyntaxError(`The "stats" property of the "options" object (when provided) is required when "preload" is true`)
                             }
 
-                            if (hasOwnProperty(options, 'file')) {
+                            if (hasOwnProp(options, 'file')) {
                                 const file = options.file;
-                                if (!atomix.valueIs.record(file)) { throw new TypeError(`The 'files' property of the "options" object (when provided) must be an object, but instead got ${typeof file}`) }
+                                if (!atomix.valueIs.record(file)) { throw new TypeError(`The 'file' property of the "options" object (when provided) must be an object, but instead got ${typeof file}`) }
 
-                                if (hasOwnProperty(file, 'path')) {
+                                if (hasOwnProp(file, 'path')) {
                                     if (!atomix.valueIs.string(file.path)) { throw new TypeError(`The "path" property of the 'files' object (when provided) must be a string, but instead got ${typeof file.path}`) }
                                     configs.file.path = file.path;
                                 } else {
                                     throw new SyntaxError(`The "path" property of the 'files' object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(file, 'name')) {
+                                if (hasOwnProp(file, 'name')) {
                                     if (!atomix.valueIs.string(file.name)) { throw new TypeError(`The "name" property of the 'files' object (when provided) must be a string, but instead got ${typeof file.name}`) }
                                     configs.file.name = file.name;
                                 } else {
                                     throw new SyntaxError(`The "name" property of the 'files' object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(file, 'eTag')) {
+                                if (hasOwnProp(file, 'eTag')) {
                                     if (!atomix.valueIs.string(file.eTag)) { throw new TypeError(`The "eTag" property of the 'files' object (when provided) must be a string, but instead got ${typeof file.eTag}`) }
                                     configs.file.eTag = file.eTag;
                                 } else {
                                     throw new SyntaxError(`The "eTag" property of the 'files' object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(file, 'size')) {
+                                if (hasOwnProp(file, 'size')) {
                                     assertPositiveInteger(file.size, 'size', 'files');
                                     configs.file.size = file.size;
                                 } else {
                                     throw new SyntaxError(`The "size" property of the 'files' object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(file, 'stats')) {
+                                if (hasOwnProp(file, 'stats')) {
                                     const stats = file.stats;
                                     if (!atomix.valueIs.record(stats)) { throw new TypeError(`The "stats" property of the 'files' object (when provided) must be an object, but instead got ${typeof stats}`) }
                                     configs.file.stats = stats;
@@ -547,7 +546,7 @@ class FilesCacheManager {
                                     throw new SyntaxError(`The "stats" property of the 'files' object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(file, 'isCached')) {
+                                if (hasOwnProp(file, 'isCached')) {
                                     if (typeof file.isCached !== 'boolean') { throw new TypeError(`The "isCached" property of the 'files' object (when provided) must be a boolean, but instead got ${typeof file.isCached}`) }
                                     configs.file.isCached = file.isCached;
                                 } else {
@@ -584,12 +583,12 @@ class FilesCacheManager {
                     if (!atomix.valueIs.record(options)) { throw new TypeError(`The "options" parameter (when provided) must be an object, but instead got ${typeof options}`) }
 
                     let preload = false;
-                    if (hasOwnProperty(options, 'preload')) {
+                    if (hasOwnProp(options, 'preload')) {
                         if (typeof options.preload !== 'boolean') { throw new TypeError(`The "preload" property of the "options" object (when provided) must be a boolean, but instead got ${typeof options.preload}`) }
                         preload = options.preload;
 
                         if (options.preload) {
-                            if (hasOwnProperty(options, 'initiator')) {
+                            if (hasOwnProp(options, 'initiator')) {
                                 const initiator = options.initiator;
                                 if (!atomix.valueIs.string(initiator)) { throw new TypeError(`The "initiator" property of the "options" object (when provided) must be a string, but instead got ${typeof initiator}`) }
                                 if (!constants.CACHE_PRELOAD_INITIATORS.includes(initiator as CachePreloadInitiator)) { throw new RangeError(`The "initiator" property of the "options" object (when provided) must be one of the following values: ${constants.CACHE_PRELOAD_INITIATORS.join(', ')}, but instead got "${initiator}".`) }
@@ -649,7 +648,6 @@ class FilesCacheManager {
         this.#_defaultEngines.push(...defaults);
     }
 
-
     /**
      * @returns The list of default engines.
      * @since v1.0.0
@@ -680,7 +678,7 @@ class FilesCacheManager {
      */
     async set(filePath: string, options?: FileSetOptions) {
         const key = atomix.http.btoa(filePath);
-        this.#_helpers.checkIfClearing('remove', key);
+        this.#_helpers.checkIfClearing('set', key);
 
         try {
             atomix.fs.canAccessSync(filePath, { throwError: true, permissions: 'Read' });
@@ -696,7 +694,7 @@ class FilesCacheManager {
                 return record.touch();
             }
 
-            if (configs.storeIn.length === 0) { configs.storeIn.push('memory') }
+            if (configs.storeIn.length === 0) { configs.storeIn.push(...this.#_defaultEngines) }
             const file = new FileCacheRecord(filePath, configs, this, this.#_enginesProxy, this.#_events);
             scopeMap.set(configs.key, file);
 
@@ -729,7 +727,7 @@ class FilesCacheManager {
     async read(options: FileOptions) {
         try {
             const configs = this.#_helpers.parseFileOptions(options);
-            this.#_helpers.checkIfClearing('remove', configs.key);
+            this.#_helpers.checkIfClearing('read', configs.key);
 
             const record = this.#_helpers.records.getRecord(configs);
             if (!record) { return undefined }
@@ -757,7 +755,7 @@ class FilesCacheManager {
     inspect(options: FileOptions) {
         try {
             const configs = this.#_helpers.parseFileOptions(options);
-            this.#_helpers.checkIfClearing('remove', configs.key);
+            this.#_helpers.checkIfClearing('get', configs.key);
 
             const record = this.#_helpers.records.getRecord(configs);
             if (!record) { return undefined }
@@ -803,7 +801,7 @@ class FilesCacheManager {
      */
     has(options: FileOptions): boolean {
         const configs = this.#_helpers.parseFileOptions(options);
-        this.#_helpers.checkIfClearing('remove', configs.key);
+        this.#_helpers.checkIfClearing('has', configs.key);
 
         const scopeMap = this.#_helpers.records.getScopeMap(configs.scope);
         return scopeMap.has(configs.key);

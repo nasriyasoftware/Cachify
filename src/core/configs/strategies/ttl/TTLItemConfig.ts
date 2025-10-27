@@ -14,9 +14,9 @@ class TTLItemConfig<F extends CacheFlavor> {
     constructor(options: BaseTTLOptions<F>, flavor: F) {
         this.#_flavor = flavor;
         this.#_data.value = options.value;
-        if (typeof options.onExpire === 'function') { this.#_data.onExpire = options.onExpire }
-        if (typeof options.sliding === 'boolean') { this.#_data.sliding = options.sliding }
-        if (typeof options.policy === 'string') { this.#_data.policy = options.policy }
+        if (typeof options.onExpire === 'function') { this.onExpire = options.onExpire }
+        if (typeof options.sliding === 'boolean') { this.sliding = options.sliding }
+        if (typeof options.policy === 'string') { this.policy = options.policy }
     }
 
     /**
@@ -44,7 +44,7 @@ class TTLItemConfig<F extends CacheFlavor> {
 
         switch (this.#_flavor) {
             case 'kvs': {
-                if (!['keep', 'evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
+                if (!['evict'].includes(policy)) { throw new SyntaxError(`The provided policy (${policy}) is not a valid ${this.#_flavor} policy.`) }
             }
                 break;
 

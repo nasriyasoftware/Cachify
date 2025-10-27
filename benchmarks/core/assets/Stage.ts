@@ -67,7 +67,7 @@ class Stage<F extends CacheFlavor> {
      * Retrieves the results of the benchmark.
      * @returns {StageReturnType} An object containing the results of the benchmark.
      * @property {string[]} store - The list of stores used in the benchmark.
-     * @property {Record<string, StagePromisePayload[]>} stages - A record containing the results of each stage of the benchmark.
+     * @property {Record<string, StagePromisePayload[]>} tasks - A record containing the results of each task of the benchmark.
      */
     get results(): StageReturnType {
         return {

@@ -1,25 +1,25 @@
-import { PersistanceStorageServices, StorageServices } from "../docs";
+import { StorageServices } from "../docs";
 import atomix from "@nasriya/atomix";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
+const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
 const validate: Record<StorageServices, (configs: any) => void> = {
     s3: (configs: any) => {
         if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
         for (const prop of ['bucket', 'region']) {
-            if (hasOwnProperty(configs, prop)) {
+            if (hasOwnProp(configs, prop)) {
                 assertNonEmptyString(configs[prop], prop);
             } else {
                 throw new SyntaxError(`The "${prop}" property of the "configs" object is required and missing.`);
             }
         }
 
-        if (hasOwnProperty(configs, 'credentials')) {
+        if (hasOwnProp(configs, 'credentials')) {
             const credentials = configs.credentials;
             if (!atomix.valueIs.record(credentials)) { throw new TypeError(`The "credentials" property of the "configs" object (when provided) must be a record, but instead got ${typeof credentials}`) }
             for (const prop of ['accessKeyId', 'secretAccessKey']) {
-                if (hasOwnProperty(credentials, prop)) {
+                if (hasOwnProp(credentials, prop)) {
                     assertNonEmptyString(credentials[prop], `credentials.${prop}`);
                 }
             }
@@ -29,16 +29,16 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     // gcs: (configs: any) => {
     //     if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-    //     if (hasOwnProperty(configs, 'bucket')) {
+    //     if (hasOwnProp(configs, 'bucket')) {
     //         assertNonEmptyString(configs.bucket, 'bucket');
     //     } else {
     //         throw new SyntaxError(`The "bucket" property of the "configs" object is required and missing.`);
     //     }
 
-    //     if (hasOwnProperty(configs, 'credentials')) {
+    //     if (hasOwnProp(configs, 'credentials')) {
     //         const props: (keyof PersistanceStorageServices['gcs']['configs']['credentials'])[] = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri', 'auth_provider_x509_cert_url', 'client_x509_cert_url'];
     //         for (const prop of props) {
-    //             if (hasOwnProperty(configs.credentials, prop)) {
+    //             if (hasOwnProp(configs.credentials, prop)) {
     //                 assertNonEmptyString(configs.credentials[prop], `credentials.${prop}`);
     //             } else {
     //                 throw new SyntaxError(`The "${prop}" property of the "credentials" object is required and missing.`);
@@ -52,15 +52,15 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     // azure: (configs: any) => {
     //     if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-    //     if (hasOwnProperty(configs, 'container')) {
+    //     if (hasOwnProp(configs, 'container')) {
     //         assertNonEmptyString(configs.container, 'container');
     //     } else {
     //         throw new SyntaxError(`The "container" property of the "configs" object is required and missing.`);
     //     }
 
-    //     const hasConnectionString = hasOwnProperty(configs, 'connectionString');
-    //     const hasAccountName = hasOwnProperty(configs, 'accountName');
-    //     const hasAccountKey = hasOwnProperty(configs, 'accountKey');
+    //     const hasConnectionString = hasOwnProp(configs, 'connectionString');
+    //     const hasAccountName = hasOwnProp(configs, 'accountName');
+    //     const hasAccountKey = hasOwnProp(configs, 'accountKey');
 
     //     if (!(hasConnectionString || (hasAccountName && hasAccountKey))) {
     //         throw new SyntaxError(`The configs object is missing the authentication information. Either "connectionString" or ("accountName" and "accountKey") must be provided.`);
@@ -77,19 +77,19 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     // ftp: (configs: any) => {
     //     if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-    //     if (hasOwnProperty(configs, 'host')) {
+    //     if (hasOwnProp(configs, 'host')) {
     //         assertNonEmptyString(configs.host, 'host');
     //     } else {
     //         throw new SyntaxError(`The "host" property of the "configs" object is required and missing.`);
     //     }
 
-    //     if (hasOwnProperty(configs, 'port')) {
+    //     if (hasOwnProp(configs, 'port')) {
     //         assertPort(configs.port, 'port');
     //     } else {
     //         throw new SyntaxError(`The "port" property of the "configs" object is required and missing.`);
     //     }
 
-    //     const hasAuth = hasOwnProperty(configs, 'username') || hasOwnProperty(configs, 'password');
+    //     const hasAuth = hasOwnProp(configs, 'username') || hasOwnProp(configs, 'password');
 
     //     if (hasAuth) {
     //         assertNonEmptyString(configs.username, 'username');
@@ -100,20 +100,20 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     // sftp: (configs: any) => {
     //     if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-    //     if (hasOwnProperty(configs, 'host')) {
+    //     if (hasOwnProp(configs, 'host')) {
     //         assertNonEmptyString(configs.host, 'host');
     //     } else {
     //         throw new SyntaxError(`The "host" property of the "configs" object is required and missing.`);
     //     }
 
-    //     if (hasOwnProperty(configs, 'port')) {
+    //     if (hasOwnProp(configs, 'port')) {
     //         assertPort(configs.port, 'port');
     //     } else {
     //         throw new SyntaxError(`The "port" property of the "configs" object is required and missing.`);
     //     }
 
-    //     const hasCredAuth = hasOwnProperty(configs, 'username') || hasOwnProperty(configs, 'password');
-    //     const hasKeyAuth = hasOwnProperty(configs, 'privateKey');
+    //     const hasCredAuth = hasOwnProp(configs, 'username') || hasOwnProp(configs, 'password');
+    //     const hasKeyAuth = hasOwnProp(configs, 'privateKey');
 
     //     if (!hasCredAuth && !hasKeyAuth) {
     //         throw new SyntaxError(`SFTP requires authentication. Provide either "username" and "password", or "username" and "privateKey".`);
@@ -130,13 +130,13 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     // redis: (configs: any) => {
     //     if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-    //     if (hasOwnProperty(configs, 'host')) {
+    //     if (hasOwnProp(configs, 'host')) {
     //         assertNonEmptyString(configs.host, 'host');
     //     } else {
     //         throw new SyntaxError(`The "host" property of the "configs" object is required and missing.`);
     //     }
 
-    //     if (hasOwnProperty(configs, 'port')) {
+    //     if (hasOwnProp(configs, 'port')) {
     //         assertPort(configs.port, 'port');
     //     } else {
     //         throw new SyntaxError(`The "port" property of the "configs" object is required and missing.`);
@@ -144,7 +144,7 @@ const validate: Record<StorageServices, (configs: any) => void> = {
 
     //     const props: (keyof PersistanceStorageServices['redis']['configs'])[] = ['username', 'password'];
     //     for (const prop of props) {
-    //         if (hasOwnProperty(configs, prop)) {
+    //         if (hasOwnProp(configs, prop)) {
     //             assertNonEmptyString(configs[prop], prop);
     //         }
     //     }
@@ -153,7 +153,7 @@ const validate: Record<StorageServices, (configs: any) => void> = {
     local: (configs: any) => {
         if (!atomix.valueIs.record(configs)) { throw new TypeError(`The "configs" argument must be a record, but instead got ${typeof configs}`) }
 
-        if (hasOwnProperty(configs, 'path')) {
+        if (hasOwnProp(configs, 'path')) {
             assertNonEmptyString(configs.path, 'path');
             const canWrite = atomix.fs.canAccessSync(configs.path, { permissions: 'Write' });
             if (!canWrite) { throw new Error(`The path "${configs.path}" does not allow write access.`) }

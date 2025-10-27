@@ -68,14 +68,12 @@ export class FilesEventsManager {
         const isRecord = atomix.valueIs.record(options);
         if (options !== undefined && !isRecord) { throw new TypeError(`The "options" parameter (when provided) must be a record, but instead got ${typeof options}`) }
         if (isRecord) {
-            const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
-
-            if (hasOwnProperty(options, 'once')) {
+            if (atomix.dataTypes.record.hasOwnProperty(options, 'once')) {
                 if (typeof options.once !== 'boolean') { throw new TypeError(`The "once" option must be a boolean, but instead got ${typeof options.once}`) }
                 configs.once = options.once;
             }
 
-            if (hasOwnProperty(options, 'type')) {
+            if (atomix.dataTypes.record.hasOwnProperty(options, 'type')) {
                 if (!atomix.valueIs.string(options.type)) { throw new TypeError(`The "type" option must be a string, but instead got ${typeof options.type}`) }
                 if (!['normal', 'beforeAll', 'afterAll'].includes(options.type)) { throw new RangeError(`The "type" option must be one of "normal", "beforeAll", or "afterAll", but instead got ${options.type}`) }
                 configs.type = options.type;

@@ -17,7 +17,7 @@ import type { BackupParameters, RestoreParameters, StorageServices } from "../..
 import type { BlockingFlags, BlockingProcess, CacheManagerAssets, CachePreloadInitiator } from "../../docs/docs";
 import type { KVSetOptions, KVSetConfigs, KVNormalSetConfigs, KVNormalSetOptions, KVPreloadWarmupSetOptions, KVPreloadWarmupSetConfigs, KVPreloadRestoreSetOptions, KVPreloadRestoreSetConfigs, KVPreloadSetConfigs } from "./docs";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
+const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
 class KVsCacheManager {
     readonly #_records: KVMainRecords = new Map();
@@ -249,13 +249,13 @@ class KVsCacheManager {
                     normalOptions: (options: KVNormalSetOptions) => {
                         const configs = this.#_helpers.setMethod.defaultConfigs(this.#_configs);
 
-                        if (hasOwnProperty(options, 'scope')) {
+                        if (hasOwnProp(options, 'scope')) {
                             if (!atomix.valueIs.string(options.scope)) { throw new TypeError(`The "scope" property of the "options" object (when provided) must be a string, but instead got ${typeof options.scope}`) }
                             if (options.scope.length === 0) { throw new RangeError(`The "scope" property of the "options" object (when provided) must be a non-empty string`) }
                             configs.scope = options.scope;
                         }
 
-                        if (hasOwnProperty(options, 'ttl')) {
+                        if (hasOwnProp(options, 'ttl')) {
                             const ttl = options.ttl;
                             const isRecord = atomix.valueIs.record(ttl);
                             const isNumber = atomix.valueIs.number(ttl);
@@ -267,25 +267,25 @@ class KVsCacheManager {
                             }
 
                             if (isRecord) {
-                                if (hasOwnProperty(ttl, 'value')) {
+                                if (hasOwnProp(ttl, 'value')) {
                                     if (!atomix.valueIs.number(ttl.value)) { throw new TypeError(`The "value" property of the "ttl" object (when provided) must be a number, but instead got ${typeof ttl.value}`) }
                                     if (!atomix.valueIs.integer(ttl.value)) { throw new TypeError(`The "value" property of the "ttl" object (when provided) must be an integer, but instead got ${ttl.value}`) }
                                     (configs.ttl as TTLKVOptions).value = ttl.value;
                                 }
 
-                                if (hasOwnProperty(ttl, 'sliding')) {
+                                if (hasOwnProp(ttl, 'sliding')) {
                                     if (typeof ttl.sliding !== 'boolean') { throw new TypeError(`The "sliding" property of the "ttl" object (when provided) must be a boolean, but instead got ${typeof ttl.sliding}`) }
                                     (configs.ttl as TTLKVOptions).sliding = ttl.sliding;
                                 }
 
-                                if (hasOwnProperty(ttl, 'onExpire')) {
+                                if (hasOwnProp(ttl, 'onExpire')) {
                                     if (typeof ttl.onExpire !== 'function') { throw new TypeError(`The "onExpire" property of the "ttl" object (when provided) must be a function, but instead got ${typeof ttl.onExpire}`) }
                                     (configs.ttl as TTLKVOptions).onExpire = ttl.onExpire;
                                 }
                             }
                         }
 
-                        if (hasOwnProperty(options, 'storeIn')) {
+                        if (hasOwnProp(options, 'storeIn')) {
                             const isString = atomix.valueIs.string(options.storeIn);
                             const isArray = atomix.valueIs.array(options.storeIn);
 
@@ -329,7 +329,7 @@ class KVsCacheManager {
                         restore: (options: KVPreloadRestoreSetOptions, normalConfigs: KVNormalSetConfigs): KVPreloadRestoreSetConfigs => {
                             const { preload: _, ...rest } = normalConfigs;
                             for (const key in rest) {
-                                if (!hasOwnProperty(rest, key)) { throw new SyntaxError(`The preload restore options object must have a "${key}" property`) }
+                                if (!hasOwnProp(rest, key)) { throw new SyntaxError(`The preload restore options object must have a "${key}" property`) }
                             }
 
                             const configs: KVPreloadRestoreSetConfigs = {
@@ -355,31 +355,31 @@ class KVsCacheManager {
 
                             const assertPositiveInteger = utils.assert.type.positiveInteger;
 
-                            if (hasOwnProperty(options, 'stats')) {
+                            if (hasOwnProp(options, 'stats')) {
                                 if (!atomix.valueIs.record(options.stats)) { throw new TypeError(`The "stats" property of the "options" object (when provided) must be an object, but instead got ${typeof options.stats}`) }
 
-                                if (hasOwnProperty(options.stats, 'dates')) {
+                                if (hasOwnProp(options.stats, 'dates')) {
                                     const dates = options.stats.dates;
                                     if (!atomix.valueIs.record(dates)) { throw new TypeError(`The "dates" property of the "stats" object (when provided) must be an object, but instead got ${typeof dates}`) }
 
-                                    if (hasOwnProperty(dates, 'created')) {
+                                    if (hasOwnProp(dates, 'created')) {
                                         assertPositiveInteger(dates.created, 'created', 'stats.dates');
                                         configs.stats.dates.created = dates.created;
                                     } else {
                                         throw new SyntaxError(`The "created" property of the "dates" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(dates, 'lastAccess')) {
+                                    if (hasOwnProp(dates, 'lastAccess')) {
                                         if (dates.lastAccess !== undefined) { assertPositiveInteger(dates.lastAccess, 'lastAccess', 'stats.dates') }
                                         configs.stats.dates.lastAccess = dates.lastAccess;
                                     }
 
-                                    if (hasOwnProperty(dates, 'lastUpdate')) {
+                                    if (hasOwnProp(dates, 'lastUpdate')) {
                                         if (dates.lastUpdate !== undefined) { assertPositiveInteger(dates.lastUpdate, 'lastUpdate', 'stats.dates') }
                                         configs.stats.dates.lastUpdate = dates.lastUpdate;
                                     }
 
-                                    if (hasOwnProperty(dates, 'expireAt')) {
+                                    if (hasOwnProp(dates, 'expireAt')) {
                                         if (dates.expireAt !== undefined) { assertPositiveInteger(dates.expireAt, 'expireAt', 'stats.dates') }
                                         configs.stats.dates.expireAt = dates.expireAt;
                                     }
@@ -387,39 +387,39 @@ class KVsCacheManager {
                                     throw new SyntaxError(`The "dates" property of the "stats" object (when provided) is required when "preload" is true`)
                                 }
 
-                                if (hasOwnProperty(options.stats, 'counts')) {
+                                if (hasOwnProp(options.stats, 'counts')) {
                                     const counts = options.stats.counts;
                                     if (!atomix.valueIs.record(counts)) { throw new TypeError(`The "counts" property of the "stats" object (when provided) must be an object, but instead got ${typeof counts}`) }
 
-                                    if (hasOwnProperty(counts, 'read')) {
+                                    if (hasOwnProp(counts, 'read')) {
                                         assertPositiveInteger(counts.read, 'read', 'stats.counts');
                                         configs.stats.counts.read = counts.read;
                                     } else {
                                         throw new SyntaxError(`The "read" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'update')) {
+                                    if (hasOwnProp(counts, 'update')) {
                                         assertPositiveInteger(counts.update, 'update', 'stats.counts');
                                         configs.stats.counts.update = counts.update;
                                     } else {
                                         throw new SyntaxError(`The "update" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'touch')) {
+                                    if (hasOwnProp(counts, 'touch')) {
                                         assertPositiveInteger(counts.touch, 'touch', 'stats.counts');
                                         configs.stats.counts.touch = counts.touch;
                                     } else {
                                         throw new SyntaxError(`The "touch" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'hit')) {
+                                    if (hasOwnProp(counts, 'hit')) {
                                         assertPositiveInteger(counts.hit, 'hit', 'stats.counts');
                                         configs.stats.counts.hit = counts.hit;
                                     } else {
                                         throw new SyntaxError(`The "hit" property of the "counts" property of the "stats" object (when provided) is required when "preload" is true`);
                                     }
 
-                                    if (hasOwnProperty(counts, 'miss')) {
+                                    if (hasOwnProp(counts, 'miss')) {
                                         assertPositiveInteger(counts.miss, 'miss', 'stats.counts');
                                         configs.stats.counts.miss = counts.miss;
                                     } else {
@@ -458,12 +458,12 @@ class KVsCacheManager {
                     if (!atomix.valueIs.record(options)) { throw new TypeError(`The "options" parameter (when provided) must be an object, but instead got ${typeof options}`) }
 
                     let preload = false;
-                    if (hasOwnProperty(options, 'preload')) {
+                    if (hasOwnProp(options, 'preload')) {
                         if (typeof options.preload !== 'boolean') { throw new TypeError(`The "preload" property of the "options" object (when provided) must be a boolean, but instead got ${typeof options.preload}`) }
                         preload = options.preload;
 
                         if (options.preload) {
-                            if (hasOwnProperty(options, 'initiator')) {
+                            if (hasOwnProp(options, 'initiator')) {
                                 const initiator = options.initiator;
                                 if (!atomix.valueIs.string(initiator)) { throw new TypeError(`The "initiator" property of the "options" object (when provided) must be a string, but instead got ${typeof initiator}`) }
                                 if (!constants.CACHE_PRELOAD_INITIATORS.includes(initiator as CachePreloadInitiator)) { throw new RangeError(`The "initiator" property of the "options" object (when provided) must be one of the following values: ${constants.CACHE_PRELOAD_INITIATORS.join(', ')}, but instead got "${initiator}".`) }
@@ -565,7 +565,7 @@ class KVsCacheManager {
                 return record.update(value);
             }
 
-            if (configs.storeIn.length === 0) { configs.storeIn.push('memory') }
+            if (configs.storeIn.length === 0) { configs.storeIn.push(...this.#_defaultEngines) }
             const record = new KVCacheRecord(key, configs, this.#_enginesProxy, this.#_events);
 
             scopeMap.set(key, record);
@@ -736,10 +736,10 @@ class KVsCacheManager {
      * @throws If the target storage service is unsupported or not implemented.
      * @example
      * // Dump to an S3 bucket
-     * await cachify.kv.backup('s3', 'backups/data-2025-07-27');
+     * await cachify.kvs.backup('s3', 'backups/data-2025-07-27');
      * 
      * @example
-     * await cachify.kv.backup('local', './backup/records-2025-07-27');
+     * await cachify.kvs.backup('local', './backup/records-2025-07-27');
      * @since v1.0.0
      */
     async backup<S extends StorageServices>(to: S, ...args: BackupParameters<S>): Promise<void> {
@@ -770,10 +770,10 @@ class KVsCacheManager {
      * @throws If the target storage service is unsupported or not implemented.
      * @example
      * // Restore from an S3 bucket
-     * await cachify.kv.restore('s3', 'backups/data-2025-07-27');
+     * await cachify.kvs.restore('s3', 'backups/data-2025-07-27');
      * 
      * @example
-     * await cachify.kv.restore('local', './backup/records-2025-07-27');
+     * await cachify.kvs.restore('local', './backup/records-2025-07-27');
      * @since v1.0.0
      */
     async restore<S extends StorageServices>(from: S, ...args: RestoreParameters<S>): Promise<void> {

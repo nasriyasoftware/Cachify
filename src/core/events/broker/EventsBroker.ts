@@ -87,11 +87,11 @@ class EventsBroker {
      *
      * @example
      * ```ts
-     * cachify.onAny.kvEvent((event) => {
+     * cachify.onAny.kvsEvent((event) => {
      *   console.log(`KV event: ${event.type}`);
      * });
      * 
-     * cachify.onAny.fileEvent((event) => {
+     * cachify.onAny.filesEvent((event) => {
      *   if (event.type === 'remove') {
      *     console.log('File cache entry removed');
      *   }
@@ -109,7 +109,7 @@ class EventsBroker {
          * @param handler - A function to handle every emitted KV event.
          * @example
          * ```ts
-         * cachify.events.onAny.kvEvent((event) => {
+         * cachify.events.onAny.kvsEvent((event) => {
          *   console.log(`KV cache event: ${event.type}`);
          * });
          * ```
@@ -122,12 +122,12 @@ class EventsBroker {
         /**
          * Registers a handler that will be executed for **any file cache event**.
          *
-         * Like `kvEvent`, this gives you visibility into all emitted file cache events.
+         * Like `kvsEvent`, this gives you visibility into all emitted file cache events.
          *
          * @param handler - A function to handle every emitted file event.
          * @example
          * ```ts
-         * cachify.onAny.fileEvent((event) => {
+         * cachify.onAny.filesEvent((event) => {
          *   if (event.type === 'touch') {
          *     console.log('File cache entry was touched.');
          *   }
@@ -160,7 +160,7 @@ class EventsBroker {
      * 
      * @example
      * ```ts
-     * cachify.emit.kv.create(payload);
+     * cachify.emit.kvs.create(payload);
      * cachify.emit.file.remove(payload);
      * ```
      * 
@@ -178,8 +178,8 @@ class EventsBroker {
          * 
          * Example:
          * ```ts
-         * cachify.events.emit.kv.create(record);
-         * cachify.events.emit.kv.evict(record, { reason: 'expired' });
+         * cachify.events.emit.kvs.create(record);
+         * cachify.events.emit.kvs.evict(record, { reason: 'expired' });
          * ```
          */
         kvs: {
@@ -404,11 +404,11 @@ class EventsBroker {
      * ```ts
      * const handler = (event) => { ... };
      * cachify.on.kv('update', handler);
-     * cachify.removeHandler.fromKv('update', handler); // removes it
+     * cachify.removeHandler.fromKvs('update', handler); // removes it
      * 
      * const anyHandler = (event) => { ... };
-     * cachify.onAny.fileEvent(anyHandler);
-     * cachify.removeHandler.fromFile('Any', anyHandler); // removes any-handler
+     * cachify.onAny.filesEvent(anyHandler);
+     * cachify.removeHandler.fromFiles('Any', anyHandler); // removes any-handler
      * ```
      * 
      * ⚠️ `fromDatabase` is a placeholder and will throw if called.
@@ -425,11 +425,11 @@ class EventsBroker {
          * @template K - A specific key-value cache event name or `'Any'`.
          * @param event - The name of the event to remove the handler for, or `'Any'`.
          * @param handler - The exact handler function to be removed.
-         * Must match the function reference used in `cachify.on.kv(...)` or `cachify.onAny.kvEvent(...)`.
+         * Must match the function reference used in `cachify.on.kv(...)` or `cachify.onAny.kvsEvent(...)`.
          * @example
          * ```ts
-         * cachify.removeHandler.fromKv('update', onUpdateHandler);
-         * cachify.removeHandler.fromKv('Any', onAnyHandler);
+         * cachify.removeHandler.fromKvs('update', onUpdateHandler);
+         * cachify.removeHandler.fromKvs('Any', onAnyHandler);
          * ```
          * @since v1.0.0
          */
@@ -443,17 +443,17 @@ class EventsBroker {
         /**
          * Removes a previously registered handler for a **file cache** event.
          *
-         * Like `fromKv`, this supports removal of both specific event handlers and
+         * Like `fromKvs`, this supports removal of both specific event handlers and
          * global "any" handlers.
          *
          * @template K - A specific file cache event name or `'Any'`.
          * @param event - The event to remove the handler for, or `'Any'`.
          * @param handler - The handler function to remove.
-         * Must match the reference used in `cachify.on.file(...)` or `cachify.onAny.fileEvent(...)`.
+         * Must match the reference used in `cachify.on.file(...)` or `cachify.onAny.filesEvent(...)`.
          * @example
          * ```ts
-         * cachify.removeHandler.fromFile('remove', handler);
-         * cachify.removeHandler.fromFile('Any', anyFileHandler);
+         * cachify.removeHandler.fromFiles('remove', handler);
+         * cachify.removeHandler.fromFiles('Any', anyFileHandler);
          * ```
          * @since v1.0.0
          */

@@ -12,12 +12,6 @@ Made with ❤️ in **Palestine** 🇵🇸
 ___
 ## Overview
 
-ChatGPT said:
-
-Perfect! Here's how that can look in Markdown with internal links and a concise overview paragraph:
-
-## Overview
-
 Cachify is a fast, flexible caching library for Node.js that supports both key-value and file caching across multiple storage backends, with built-in lifecycle management and persistence.  
 This documentation covers the essential concepts, setup, and best practices to get started quickly and efficiently.
 
@@ -26,7 +20,6 @@ This documentation covers the essential concepts, setup, and best practices to g
 - [Cachify](#cachify)
         - [Visit us at www.nasriya.net.](#visit-us-at-wwwnasriyanet)
   - [Overview](#overview)
-  - [Overview](#overview-1)
     - [Contents](#contents)
   - [Why Cachify and When to Use It](#why-cachify-and-when-to-use-it)
     - [Key Advantages](#key-advantages)
@@ -79,7 +72,7 @@ Cachify goes **beyond traditional key-value caching** like Redis, offering a uni
 - You want a **Node.js-native, highly extensible caching library** that complements or goes beyond Redis.
 
 
----
+___
 ## Installation & Importing
 ### Installation
 
@@ -97,7 +90,7 @@ Importing in **CommonJS** modules
 ```js
 const cachify = require('@nasriya/cachify').default;
 ```
----
+___
 
 ## Usage
 This section guides you through Cachify’s core usage in a logical order.

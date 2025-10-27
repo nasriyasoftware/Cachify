@@ -49,23 +49,23 @@ class Engines {
 
             if (!atomix.valueIs.record(handlers)) { throw new TypeError(`The "handlers" argument must be an object literal, but instead got ${typeof handlers}`) }
 
-            const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
+            const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
-            if (hasOwnProperty(handlers, "onSet")) {
+            if (hasOwnProp(handlers, "onSet")) {
                 if (typeof handlers.onSet !== "function") { throw new TypeError(`The "handlers.onSet" method must be a function, but instead got ${typeof handlers.onSet}`) }
                 if (handlers.onSet.length < 2) { throw new TypeError(`The "handlers.onSet" method must accept at least two arguments: "record", "value", and "context".`) }
             } else {
                 throw new SyntaxError(`The "handlers" argument must be an object with the "onSet" method defined.`);
             }
 
-            if (hasOwnProperty(handlers, "onRead")) {
+            if (hasOwnProp(handlers, "onRead")) {
                 if (typeof handlers.onRead !== "function") { throw new TypeError(`The "handlers.onRead" method must be a function, but instead got ${typeof handlers.onRead}`) }
                 if (handlers.onRead.length < 1) { throw new TypeError(`The "handlers.onRead" method must accept at least one argument: "record".`) }
             } else {
                 throw new SyntaxError(`The "handlers" argument must be an object with the "onRead" method defined.`);
             }
 
-            if (hasOwnProperty(handlers, "onRemove")) {
+            if (hasOwnProp(handlers, "onRemove")) {
                 if (typeof handlers.onRemove !== "function") { throw new TypeError(`The "handlers.onRemove" method must be a function, but instead got ${typeof handlers.onRemove}`) }
                 if (handlers.onRemove.length < 1) { throw new TypeError(`The "handlers.onRemove" method must accept at least one argument: "record".`) }
             } else {

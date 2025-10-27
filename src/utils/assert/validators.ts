@@ -1,7 +1,5 @@
 import atomix from "@nasriya/atomix";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
-
 const string = (value: unknown, name: string, context?: string): value is string => {
     if (!atomix.valueIs.string(value)) { throw new TypeError(`The "${name}" property of the "${context ?? 'options'}" object (when provided) must be a string, but instead got ${typeof value}`) }
     return true;

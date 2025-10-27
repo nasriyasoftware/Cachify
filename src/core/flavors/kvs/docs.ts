@@ -22,7 +22,7 @@ type KVTypeMap = {
              * @default 'global'
              * 
              * @example
-             * cachify.kv.set('key', 'value', { scope: 'user' });
+             * cachify.kvs.set('key', 'value', { scope: 'user' });
              * @since v1.0.0
              */
             scope?: string;
@@ -50,9 +50,9 @@ type KVTypeMap = {
              * or a `TTLKVOptions` object.
              * 
              * @example
-             * cachify.kv.set('key', 'value', { ttl: 5000 });
+             * cachify.kvs.set('key', 'value', { ttl: 5000 });
              * @example
-             * cachify.kv.set('key', 'value', { ttl: { value: 5000, onExpire: (record) => console.log(`Record ${record.key} has expired.`) } });
+             * cachify.kvs.set('key', 'value', { ttl: { value: 5000, onExpire: (record) => console.log(`Record ${record.key} has expired.`) } });
              * @since v1.0.0
              */
             ttl?: number | TTLKVOptions;

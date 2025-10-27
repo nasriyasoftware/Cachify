@@ -126,7 +126,7 @@ class KVCacheRecord {
 
     /**
      * Retrieves the flavor of the cache record.
-     * @returns {'kv'} The flavor of the cache record.
+     * @returns {'kvs'} The flavor of the cache record.
      */
     get flavor(): 'kvs' { return this.#_flavor }
 

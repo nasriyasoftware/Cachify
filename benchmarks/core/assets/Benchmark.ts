@@ -75,7 +75,6 @@ class Benchmark {
 
                 for (const [stageName_, stageAnalytics] of Object.entries(testAnalytics)) {
                     const stageName = stageName_ as StageName;
-                    stageAnalytics.store
 
                     consoleX.log(`- ${colors.yellow}${stageName}${reset} Implementation [${colors.yellow}${stageAnalytics.store.join(', ')}${reset}]:`);
                     const table = {} as any;

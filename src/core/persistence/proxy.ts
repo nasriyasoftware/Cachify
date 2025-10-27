@@ -1,11 +1,9 @@
 import cachify from "../../cachify";
 import atomix from "@nasriya/atomix";
 import constants from "../consts/consts";
+import PersistenceManager from "./persistence.manager";
 import type { CacheFlavor } from "../docs/docs";
 import type { ProxyBackupParameters, ProxyRestoreParameters, StorageServices } from "./docs";
-import PersistenceManager from "./persistence.manager";
-
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
 
 class PersistenceProxy {
     readonly #_manager: PersistenceManager;
@@ -17,7 +15,7 @@ class PersistenceProxy {
             backupData: (data: unknown) => {
                 if (!atomix.valueIs.record(data)) { throw new TypeError(`The "data" argument must be a record, but instead got ${typeof data}`) }
 
-                if (hasOwnProperty(data, 'source')) {
+                if (atomix.dataTypes.record.hasOwnProperty(data, 'source')) {
                     const source = data.source;
                     if (!atomix.valueIs.string(source)) { throw new TypeError(`The "source" property of the "data" object must be a string, but instead got ${typeof source}`) }
                     if (!constants.CACHE_FLAVORS.includes(source as CacheFlavor)) { throw new RangeError(`The "source" property of the "data" object must be one of the following values: ${constants.CACHE_FLAVORS.join(', ')}`) }
@@ -26,7 +24,7 @@ class PersistenceProxy {
                     throw new SyntaxError(`The "source" property of the "data" object is required and missing.`);
                 }
 
-                if (hasOwnProperty(data, 'content')) {
+                if (atomix.dataTypes.record.hasOwnProperty(data, 'content')) {
                     const content = data.content;
                     if (!(content instanceof Map)) { throw new TypeError(`The "content" property of the "data" object must be a Map, but instead got ${typeof content}`) }
                 } else {

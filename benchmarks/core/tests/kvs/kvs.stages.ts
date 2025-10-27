@@ -7,7 +7,7 @@ const setStage: TestStageFunction = async (ctx) => {
     const tag = `[${ctx.flavor.toUpperCase()}][${ctx.storeIn.value.join(' | ')}]`;
     const taskName = 'set' as TaskName;
 
-    consoleX.time({ id: 'creaet_set_promises', title: `${tag} Creating SET promises...`, tag: 'SET Promises' });
+    consoleX.time({ id: 'create_set_promises', title: `${tag} Creating SET promises...`, tag: 'SET Promises' });
     const setPromises: Promise<StagePromisePayload<'set'>>[] = [];
 
     for (let i = 0; i < ctx.recordsNumber; i++) {
@@ -32,7 +32,7 @@ const setStage: TestStageFunction = async (ctx) => {
             })
         )
     }
-    consoleX.timeEnd('creaet_set_promises');
+    consoleX.timeEnd('create_set_promises');
 
     consoleX.time({ id: 'execute_set_promises', title: `${tag} Setting values...`, tag: 'SET' });
     const results: PromiseSettledResult<
@@ -51,7 +51,7 @@ const readStage: TestStageFunction = async (ctx) => {
     const tag = `[${ctx.flavor.toUpperCase()}][${ctx.storeIn.value.join(' | ')}]`;
     const taskName = 'hot_read' as TaskName;
 
-    consoleX.time({ id: 'creaet_get_promises', title: `${tag} Creating GET promises...`, tag: 'GET Promises' });
+    consoleX.time({ id: 'create_get_promises', title: `${tag} Creating GET promises...`, tag: 'GET Promises' });
     const getPromises: Promise<StagePromisePayload<'hot_read'>>[] = [];
 
     for (let i = 0; i < ctx.recordsNumber; i++) {
@@ -76,9 +76,9 @@ const readStage: TestStageFunction = async (ctx) => {
             })
         )
     }
-    consoleX.timeEnd('creaet_get_promises');
+    consoleX.timeEnd('create_get_promises');
 
-    consoleX.time({ id: 'execute_set_promises', title: `${tag} Setting values...`, tag: 'SET' });
+    consoleX.time({ id: 'execute_get_promises', title: `${tag} Reading values...`, tag: 'SET' });
     const results: PromiseSettledResult<
         StagePromisePayload<'hot_read'>
     >[] = [];

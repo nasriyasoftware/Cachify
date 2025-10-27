@@ -1,6 +1,6 @@
 import atomix from "@nasriya/atomix";
 import { BaseTTLOptions, CacheStatusChangeHandler, FlavorPolicyMap, TTLExpirationHandler } from "../docs";
-import { CacheFlavor, CacheRecord } from "../../../docs/docs";
+import { CacheFlavor } from "../../../docs/docs";
 
 class TTLConfig<F extends CacheFlavor> {
     readonly #_updateStatus: CacheStatusChangeHandler;

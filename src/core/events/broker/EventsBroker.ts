@@ -15,7 +15,7 @@ import KVCacheRecord from "../../flavors/kvs/kvs.record";
  * - Emit events (`emit`)
  * - Remove registered handlers (`removeHandler`)
  * 
- * Supports cache flavors: `kv`, `file`, and (in future) `database`.
+ * Supports cache flavors: `kvs`, `file`, and (in future) `database`.
  *
  * @since v1.0.0
  */
@@ -32,7 +32,7 @@ class EventsBroker {
      * 
      * @example
      * ```ts
-     * cachify.on.kv('create', (payload) => { console.log('KV created', payload); });
+     * cachify.on.kvs('create', (payload) => { console.log('KV created', payload); });
      * cachify.on.file('remove', (payload) => { console.log('File removed', payload); });
      * ```
      *
@@ -267,7 +267,7 @@ class EventsBroker {
         /**
          * Emits events related to the **file cache** flavor.
          * 
-         * Similar to `emit.kv`, this object exposes emitters for events
+         * Similar to `emit.kvs`, this object exposes emitters for events
          * such as `read`, `remove`, `touch`, etc., related to file-based caching.
          * 
          * Example:
@@ -403,7 +403,7 @@ class EventsBroker {
      * @example
      * ```ts
      * const handler = (event) => { ... };
-     * cachify.on.kv('update', handler);
+     * cachify.on.kvs('update', handler);
      * cachify.removeHandler.fromKvs('update', handler); // removes it
      * 
      * const anyHandler = (event) => { ... };
@@ -425,7 +425,7 @@ class EventsBroker {
          * @template K - A specific key-value cache event name or `'Any'`.
          * @param event - The name of the event to remove the handler for, or `'Any'`.
          * @param handler - The exact handler function to be removed.
-         * Must match the function reference used in `cachify.on.kv(...)` or `cachify.onAny.kvsEvent(...)`.
+         * Must match the function reference used in `cachify.on.kvs(...)` or `cachify.onAny.kvsEvent(...)`.
          * @example
          * ```ts
          * cachify.removeHandler.fromKvs('update', onUpdateHandler);

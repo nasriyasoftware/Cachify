@@ -21,7 +21,7 @@ class ExtPersistenceManager {
      * Initiates a backup process for the specified cache flavor and storage service.
      *
      * This function dispatches the backup operation to the appropriate cache manager
-     * based on the provided cache flavor. The `kv` flavor targets the key-value cache,
+     * based on the provided cache flavor. The `kvs` flavor targets the key-value cache,
      * while the `files` flavor targets the file cache.
      *
      * @template F - The cache flavor type, indicating the cache source.
@@ -45,7 +45,7 @@ class ExtPersistenceManager {
      * Initiates a restore process from the specified storage service for all cache flavors.
      *
      * This function dispatches the restore operation to the appropriate cache manager
-     * based on the provided cache flavor. The `kv` flavor targets the key-value cache,
+     * based on the provided cache flavor. The `kvs` flavor targets the key-value cache,
      * while the `files` flavor targets the file cache.
      *
      * @template S - The type of storage service to restore from.

@@ -31,8 +31,18 @@ export class Cachify extends CachifyClient {
      * 
      * @returns {CachifyClient} A new instance of the CachifyClient class.
      * @since v1.0.0
-     */
+    */
     createClient(): CachifyClient {
+        return Cachify.createClient();
+    }
+
+    /**
+     * Creates a new instance of the CachifyClient class.
+     * 
+     * @returns {CachifyClient} A new instance of the CachifyClient class.
+     * @since v1.0.0
+    */
+    static createClient(): CachifyClient {
         return new CachifyClient();
     }
 }

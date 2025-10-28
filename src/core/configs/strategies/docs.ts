@@ -6,8 +6,8 @@ export type TTLExpirationHandler = (record: CacheRecord) => void;
 export type TTLExpirationPolicy = 'evict' | 'refresh' | 'keep';
 
 export type FlavorPolicyMap = {
-    kvs: Extract<TTLExpirationPolicy, 'evict'>;              // kv records can't use any policy
-    files: Extract<TTLExpirationPolicy, 'evict' | 'keep'>;   // file supports only evict/keep
+    kvs: Extract<TTLExpirationPolicy, 'evict'>;              // kvs records can't use any policy
+    files: Extract<TTLExpirationPolicy, 'evict' | 'keep'>;   // files supports only evict/keep
     database: TTLExpirationPolicy;                           // full support (example)
 };
 

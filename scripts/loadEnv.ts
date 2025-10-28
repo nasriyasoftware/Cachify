@@ -54,90 +54,96 @@ const helpers = {
 }
 
 /**
- * Loads environment variables from the provided path.
+ * Loads environment variables from a provided path.
  *
- * @param {string} src - The path to the environment file or directory.
- * @param {EnvReadOptions} [options] - Optional configuration object.
- * @param {boolean} [options.overwrite] - Whether to overwrite existing environment variables.
- * @param {boolean} [options.mustExist] - Whether to throw an error if the environment file does not exist.
+ * @param {string} srcInput - The path to the environment file or directory.
+ * @param {EnvReadOptions} [options] - Optional configurations for loading the environment file.
+ * @param {boolean} [options.overwrite=true] - Whether to overwrite existing environment variables.
+ * @param {boolean} [options.mustExist=false] - Whether to throw an error if the environment file does not exist.
  *
  * @throws {Error} If the environment file does not exist and mustExist is true.
  * @throws {Error} If the current user does not have read access to the environment file.
+ * @throws {Error} If the directory does not contain a .env file and mustExist is true.
  */
-export async function loadEnv(src: string, options?: EnvReadOptions) {
+export async function loadEnv(srcInput: string, options?: EnvReadOptions) {
     const configs = helpers.parseOptions(options);
 
-    // Check if the provided path exist
-    if (!fs.existsSync(src)) {
-        if (configs.mustExist) { throw new Error(`The path of the environment file "${src}" does not exist.`) };
+    // Check if the provided path exists
+    if (fs.existsSync(srcInput)) {
+        if (configs.mustExist) { throw new Error(`The path of the environment file "${srcInput}" does not exist.`) };
         return;
-    };
+    }
 
     // Check if the current user has read access to the provided path
-    await atomix.fs.promises.canAccess(src, { permissions: 'Read', throwError: true });
+    await atomix.fs.promises.canAccess(srcInput, { permissions: 'Read', throwError: true });
 
     // Get the path stats
-    const stats = await fs.promises.stat(src);
+    const stats = await fs.promises.stat(srcInput);
 
     // Get the environment file path
-    const envPath = stats.isFile() ? src : path.join(src, '.env');
+    const envPath = stats.isFile() ? srcInput : path.join(srcInput, '.env');
+
+    // Recheck the concluded path if the input was a directory
     if (stats.isDirectory()) {
         // Check if the directory has a .env file
         if (!fs.existsSync(envPath)) {
-            if (configs.mustExist) { throw new Error(`The path of the environment file "${envPath}" does not exist.`) };
+            if (configs.mustExist) { throw new Error(`The directory "${srcInput}" does not contain a .env file.`) };
             return;
-        };
+        }
 
         // Check if the current user has read access to the .env file
         await atomix.fs.promises.canAccess(envPath, { permissions: 'Read', throwError: true });
     }
 
-    // Read the environment file content
+    // Load the environment file
     const content = await fs.promises.readFile(envPath, 'utf-8');
     const envs = helpers.content.parse(content);
     helpers.content.write(envs, configs.overwrite);
 }
 
 /**
- * Synchronously loads environment variables from the provided path.
+ * Loads environment variables from a provided path synchronously.
  *
- * @param {string} src - The path to the environment file or directory.
- * @param {object} [options] - Optional configuration object.
- * @param {boolean} [options.overwrite] - Whether to overwrite existing environment variables.
- * @param {boolean} [options.mustExist] - Whether to throw an error if the environment file does not exist.
+ * @param {string} srcInput - The path to the environment file or directory.
+ * @param {EnvReadOptions} [options] - Optional configurations for loading the environment file.
+ * @param {boolean} [options.overwrite=true] - Whether to overwrite existing environment variables.
+ * @param {boolean} [options.mustExist=false] - Whether to throw an error if the environment file does not exist.
  *
  * @throws {Error} If the environment file does not exist and mustExist is true.
  * @throws {Error} If the current user does not have read access to the environment file.
+ * @throws {Error} If the directory does not contain a .env file and mustExist is true.
  */
-export function loadEnvSync(src: string, options?: { overwrite?: boolean, mustExist?: boolean }) {
+export function loadEnvSync(srcInput: string, options?: EnvReadOptions) {
     const configs = helpers.parseOptions(options);
 
-    // Check if the provided path exist
-    if (!fs.existsSync(src)) {
-        if (configs.mustExist) { throw new Error(`The path of the environment file "${src}" does not exist.`) };
+    // Check if the provided path exists
+    if (fs.existsSync(srcInput)) {
+        if (configs.mustExist) { throw new Error(`The path of the environment file "${srcInput}" does not exist.`) };
         return;
-    };
+    }
 
     // Check if the current user has read access to the provided path
-    atomix.fs.canAccessSync(src, { permissions: 'Read', throwError: true });
+    atomix.fs.canAccessSync(srcInput, { permissions: 'Read', throwError: true });
 
     // Get the path stats
-    const stats = fs.statSync(src);
+    const stats = fs.statSync(srcInput);
 
     // Get the environment file path
-    const envPath = stats.isFile() ? src : path.join(src, '.env');
+    const envPath = stats.isFile() ? srcInput : path.join(srcInput, '.env');
+
+    // Recheck the concluded path if the input was a directory
     if (stats.isDirectory()) {
         // Check if the directory has a .env file
         if (!fs.existsSync(envPath)) {
-            if (configs.mustExist) { throw new Error(`The path of the environment file "${envPath}" does not exist.`) };
+            if (configs.mustExist) { throw new Error(`The directory "${srcInput}" does not contain a .env file.`) };
             return;
-        };
+        }
 
         // Check if the current user has read access to the .env file
         atomix.fs.canAccessSync(envPath, { permissions: 'Read', throwError: true });
     }
 
-    // Read the environment file content
+    // Load the environment file
     const content = fs.readFileSync(envPath, 'utf-8');
     const envs = helpers.content.parse(content);
     helpers.content.write(envs, configs.overwrite);

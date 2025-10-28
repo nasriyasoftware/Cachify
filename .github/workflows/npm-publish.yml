@@ -17,9 +17,6 @@ jobs:
         image: redis:7
         ports:
           - 6379:6379
-        options: >-
-          --save ""
-          --appendonly no
 
     env:
       REDIS_TEST_URL: redis://localhost:6379

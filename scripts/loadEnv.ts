@@ -58,7 +58,7 @@ const helpers = {
  *
  * @param {string} srcInput - The path to the environment file or directory.
  * @param {EnvReadOptions} [options] - Optional configurations for loading the environment file.
- * @param {boolean} [options.overwrite=true] - Whether to overwrite existing environment variables.
+ * @param {boolean} [options.overwrite=false] - Whether to overwrite existing environment variables.
  * @param {boolean} [options.mustExist=false] - Whether to throw an error if the environment file does not exist.
  *
  * @throws {Error} If the environment file does not exist and mustExist is true.
@@ -106,7 +106,7 @@ export async function loadEnv(srcInput: string, options?: EnvReadOptions) {
  *
  * @param {string} srcInput - The path to the environment file or directory.
  * @param {EnvReadOptions} [options] - Optional configurations for loading the environment file.
- * @param {boolean} [options.overwrite=true] - Whether to overwrite existing environment variables.
+ * @param {boolean} [options.overwrite=false] - Whether to overwrite existing environment variables.
  * @param {boolean} [options.mustExist=false] - Whether to throw an error if the environment file does not exist.
  *
  * @throws {Error} If the environment file does not exist and mustExist is true.

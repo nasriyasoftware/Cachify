@@ -2,7 +2,7 @@ import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
 import KVCacheRecord from "./kvs.record";
-import KVCacheConfig from "../../configs/managers/kv/KVCacheConfig";
+import KVsCacheConfig from "../../configs/managers/kvs/KVsCacheConfig";
 import KVsEventsManager from "../../events/managers/kvs/KVsEventsManager";
 import helpers from "../helpers";
 import constants from "../../consts/consts";
@@ -25,7 +25,7 @@ class KVsCacheManager {
     readonly #_enginesProxy: EnginesProxy;
     readonly #_persistenceProxy: PersistenceProxy;
     readonly #_events: KVsEventsManager;
-    readonly #_configs: KVCacheConfig;
+    readonly #_configs: KVsCacheConfig;
     readonly #_queue = new atomix.tools.TasksQueue({ autoRun: true });
     readonly #_jobs = { clearIdleItems: undefined as unknown as ScheduledTask }
     readonly #_flags = {
@@ -49,7 +49,7 @@ class KVsCacheManager {
                 }
             }
 
-            this.#_configs = new KVCacheConfig(onCacheStatusChange);
+            this.#_configs = new KVsCacheConfig(onCacheStatusChange);
         }
 
         // Prepare the scheduled task to clean up idle items
@@ -231,7 +231,7 @@ class KVsCacheManager {
             this.#_flags.blocking[process] = true;
         },
         setMethod: {
-            defaultConfigs: (cacheConfig: KVCacheConfig) => {
+            defaultConfigs: (cacheConfig: KVsCacheConfig) => {
                 const configs: KVNormalSetConfigs = {
                     preload: false,
                     scope: 'global',

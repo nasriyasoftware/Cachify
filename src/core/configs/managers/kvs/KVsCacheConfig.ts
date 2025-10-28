@@ -2,7 +2,7 @@ import atomix from "@nasriya/atomix";
 import CacheConfig from "../../strategies/CacheConfig";
 import { CacheStatusChangeHandler } from "../../strategies/docs";
 
-class KVCacheConfig extends CacheConfig<'kvs'> {
+class KVsCacheConfig extends CacheConfig<'kvs'> {
     readonly #_limits = {
         maxTotalSize: 1024 * 1024 * 1024,   // 1 GB
     }
@@ -39,4 +39,4 @@ class KVCacheConfig extends CacheConfig<'kvs'> {
     }
 }
 
-export default KVCacheConfig;
+export default KVsCacheConfig;

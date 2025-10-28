@@ -2,7 +2,7 @@ import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
 import FileCacheRecord from "./files.record";
-import FilesCacheConfig from "../../configs/managers/file/FilesCacheConfig";
+import FilesCacheConfig from "../../configs/managers/files/FilesCacheConfig";
 import FilesEventsManager from "../../events/managers/files/FilesEventsManager";
 import helpers from "../helpers";
 

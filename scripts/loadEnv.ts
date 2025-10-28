@@ -69,7 +69,7 @@ export async function loadEnv(srcInput: string, options?: EnvReadOptions) {
     const configs = helpers.parseOptions(options);
 
     // Check if the provided path exists
-    if (fs.existsSync(srcInput)) {
+    if (!fs.existsSync(srcInput)) {
         if (configs.mustExist) { throw new Error(`The path of the environment file "${srcInput}" does not exist.`) };
         return;
     }
@@ -117,7 +117,7 @@ export function loadEnvSync(srcInput: string, options?: EnvReadOptions) {
     const configs = helpers.parseOptions(options);
 
     // Check if the provided path exists
-    if (fs.existsSync(srcInput)) {
+    if (!fs.existsSync(srcInput)) {
         if (configs.mustExist) { throw new Error(`The path of the environment file "${srcInput}" does not exist.`) };
         return;
     }

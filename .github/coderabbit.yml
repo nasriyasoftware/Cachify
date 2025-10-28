@@ -1,0 +1,12 @@
+review:
+  incremental: true          # only review new commits automatically
+  auto_review: true          # review automatically on new commits
+  manual_trigger: true       # allow manual /review triggers
+  on_merge: false            # don't re-review on merge commits
+  on_comment: true           # respond to /review comments
+
+# Optional (but recommended)
+notifications:
+  pull_request: true
+  inline_comments: true
+  summary_comment: true

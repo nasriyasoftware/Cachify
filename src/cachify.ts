@@ -27,7 +27,7 @@ export class Cachify extends CachifyClient {
     }
 
     /**
-     * Creates a new instance of the CachifyClient class with the given options.
+     * Creates a new instance of the CachifyClient class.
      * 
      * @returns {CachifyClient} A new instance of the CachifyClient class.
      * @since v1.0.0

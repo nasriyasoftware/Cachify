@@ -1,10 +1,10 @@
-import cachify from '../../../cachify';
+import CachifyClient from '../../../client';
 import crypto from 'crypto';
 import constants from "../../consts/consts";
 import validateService from "./service.validator";
-import { ExportedData, StorageServices, TransformCallbackFunc } from "../docs";
-import { FilePreloadRestoreSetOptions } from '../../memory/files/docs';
-import { KVPreloadRestoreSetOptions } from '../../memory/kv/docs';
+import type { ExportedData, StorageServices, TransformCallbackFunc } from "../docs";
+import type { FilePreloadRestoreSetOptions } from '../../flavors/files/docs';
+import type { KVPreloadRestoreSetOptions } from '../../flavors/kvs/docs';
 
 const helpers = {
     validateService(service: StorageServices, configs: any) {
@@ -153,7 +153,7 @@ const helpers = {
      * @param record - The record to set in the cache.
      * @returns A promise that resolves when the record is set in the cache.
      */
-    setRecord(record: ExportedData) {
+    setRecord(record: ExportedData, client: CachifyClient) {
         try {
             const now = Date.now();
             const expireAt = record.stats.dates.expireAt;
@@ -171,26 +171,26 @@ const helpers = {
                         scope: record.scope,
                         key: record.key,
                         stats: record.stats,
-                        ttl: { flavor: 'files', ...record.ttl },
+                        ttl: record.ttl,
                         storeIn: record.engines,
                         file: record.file
                     }
 
-                    action = cachify.files.set(record.file.path, configs);
+                    action = client.files.set(record.file.path, configs);
                 }
                     break;
 
-                case 'kv': {
+                case 'kvs': {
                     const configs: KVPreloadRestoreSetOptions = {
                         preload: true,
                         initiator: 'restore',
                         scope: record.scope,
                         stats: record.stats,
-                        ttl: { flavor: 'kv', ...record.ttl },
+                        ttl: record.ttl,
                         storeIn: record.engines,
                     }
 
-                    action = cachify.kv.set(record.key, record.value, configs);
+                    action = client.kvs.set(record.key, record.value, configs);
                 }
                     break;
 

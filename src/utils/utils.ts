@@ -1,7 +1,7 @@
 import atomix from "@nasriya/atomix";
 import { basicValidators } from "./assert/validators";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
+const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
 const assert = {
     type: basicValidators,
@@ -15,7 +15,7 @@ const assert = {
             validator?: (value: unknown, name: string, context?: string) => void,
         } = { required: false },
     ) => {
-        if (hasOwnProperty(obj, prop)) {
+        if (hasOwnProp(obj, prop)) {
             options?.validator?.(obj[prop], prop, options.context);
             options?.onValidResult?.();
         } else if (options.required) {

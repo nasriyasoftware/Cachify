@@ -1,22 +1,24 @@
-import { Brand } from "@nasriya/atomix";
-import FileCacheRecord from "../memory/files/file";
-import KVCacheRecord from "../memory/kv/record";
-import KVCacheManager from "../memory/kv/manager";
-import FileCacheManager from "../memory/files/manager";
+import type { Brand } from "@nasriya/atomix";
+import FileCacheRecord from "../flavors/files/files.record";
+import KVCacheRecord from "../flavors/kvs/kvs.record";
+import KVsCacheManager from "../flavors/kvs/kvs.manager";
+import FilesCacheManager from "../flavors/files/files.manager";
 // Import the database cache record type
 
-import { FileCacheRecordJSON, KVCacheRecordJSON } from "../events/docs";
+import { EventsManagers, FileCacheRecordJSON, KVCacheRecordJSON } from "../events/docs";
 import { CACHE_PRELOAD_INITIATORS } from "../consts/consts";
+import EnginesProxy from "../engines/EnginesProxy";
+import PersistenceProxy from "../persistence/proxy";
 
 export type CacheMetaData = {
-    kv: {
-        manager: KVCacheManager;
+    kvs: {
+        manager: KVsCacheManager;
         record: KVCacheRecord;
         jsonRecord: KVCacheRecordJSON
     }
 
     files: {
-        manager: FileCacheManager;
+        manager: FilesCacheManager;
         record: FileCacheRecord;
         jsonRecord: FileCacheRecordJSON
     }
@@ -47,4 +49,10 @@ export type BlockingProcess = keyof BlockingFlags;
 export type CacheData<K extends CacheFlavor> = {
     source: K;
     content: Map<string, Map<string, CacheMetaData[K]['record']>>;
+}
+
+export type CacheManagerAssets<T extends CacheFlavor> = {
+    enginesProxy: EnginesProxy;
+    persistenceProxy: PersistenceProxy;
+    eventsManager: EventsManagers[T];
 }

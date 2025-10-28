@@ -1,50 +1,6 @@
-import { AddHandlerOptions } from "@nasriya/atomix";
-import engines from "./engines/engines";
-import FileCacheManager from "./core/memory/files/manager";
-import KVCacheManager from "./core/memory/kv/manager";
-import eventsBroker from "./core/events/broker/EventsBroker";
-import externalPersistenceManager from "./persistence/external.persistence.manager";
+import CachifyClient from "./client";
 
-class Cachify {
-    readonly #_managers = {
-        kv: new KVCacheManager,
-        files: new FileCacheManager
-    }
-
-    /**
-     * Clears the cache for the specified scope or for all scopes if no scope is provided.
-     * 
-     * This method delegates the clearing operation to the `clear` method of all cache managers.
-     * 
-     * @param {string} [scope] - The scope for which to clear the cache. If not provided, clears all scopes.
-     * @since v1.0.0
-     */
-    async clear(scope?: string) {
-        // Call the `clear` method of all cache managers
-        await Promise.all([
-            this.#_managers.kv.clear(scope),
-            this.#_managers.files.clear(scope),
-            /**
-             * TODO: Once other cache managers are implemented,
-             * call the `clear` method of each cache manager
-             */
-        ]);
-    }
-
-    /**
-     * Access the key-value cache manager.
-     * @returns {KVCacheManager}
-     * @since v1.0.0
-     */
-    get kv(): KVCacheManager { return this.#_managers.kv }
-
-    /**
-     * Access the file cache manager.
-     * @returns {FileCacheManager}
-     * @since v1.0.0
-     */
-    get files(): FileCacheManager { return this.#_managers.files }
-
+export class Cachify extends CachifyClient {
     /**
      * Retrieves the current debug mode status for the cache system.
      * 
@@ -71,29 +27,24 @@ class Cachify {
     }
 
     /**
-     * Retrieves the events broker for the cache system.
+     * Creates a new instance of the CachifyClient class.
      * 
-     * The events broker is used to emit and listen to cache-related events.
-     * 
+     * @returns {CachifyClient} A new instance of the CachifyClient class.
      * @since v1.0.0
-     */
-    get events() { return eventsBroker }
+    */
+    createClient(): CachifyClient {
+        return Cachify.createClient();
+    }
 
     /**
-     * Access the engines manager.
+     * Creates a new instance of the CachifyClient class.
      * 
-     * The engines manager is used to configure and access the engines
-     * used by the cache system to store records.
-     * 
+     * @returns {CachifyClient} A new instance of the CachifyClient class.
      * @since v1.0.0
-     */
-    get engines() { return engines }
-
-    /**
-     * 
-     * @since v1.0.0
-     */
-    get persistence() { return externalPersistenceManager }
+    */
+    static createClient(): CachifyClient {
+        return new CachifyClient();
+    }
 }
 
 const cachify = new Cachify();

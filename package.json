@@ -1,6 +1,6 @@
 {
   "name": "@nasriya/cachify",
-  "version": "0.0.6-beta",
+  "version": "0.0.7-beta",
   "description": "A lightweight, extensible in-memory caching library for storing anything, with built-in TTL and customizable cache types.",
   "keywords": [
     "cache",
@@ -62,14 +62,14 @@
   "license": "NPCL-1",
   "author": "Nasriya Software",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.876.0",
+    "@aws-sdk/client-s3": "^3.917.0",
     "@nasriya/postbuild": "^1.1.5",
-    "@redis/client": "^5.8.2",
+    "@redis/client": "^5.9.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.3.0",
-    "bun": "^1.2.23",
-    "jest": "^30.1.0",
-    "ts-jest": "^29.4.1"
+    "@types/node": "^24.9.1",
+    "bun": "^1.3.1",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5"
   },
   "dependencies": {
     "@nasriya/atomix": "^1.0.23",
@@ -78,8 +78,8 @@
     "@nasriya/uuidx": "^1.0.3"
   },
   "peerDependencies": {
-    "@aws-sdk/client-s3": "^3.876.0",
-    "@redis/client": "^5.8.2"
+    "@aws-sdk/client-s3": "^3.917.0",
+    "@redis/client": "^5.9.0"
   },
   "peerDependenciesMeta": {
     "@redis/client": {

@@ -1,9 +1,19 @@
-import benchmark from "./TS/main";
-import preventSleep from "./helpers/preventSleep";
+import preventSleep from "./setup/preventSleep";
+import configs from "./setup/configs";
+import benchmark from './benchmark';
+
+const preBenchmark = async () => {
+    await preventSleep.start();
+    await configs.update();
+}
+
+const postBenchmark = async () => {
+    await preventSleep.stop();
+}
 
 try {
-    await preventSleep.start();
-    await benchmark();
+    await preBenchmark();
+    await benchmark!.run();
 } finally {
-    await preventSleep.stop();
+    await postBenchmark();
 }

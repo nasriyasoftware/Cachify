@@ -1,8 +1,8 @@
 import { Brand, Prettify } from "@nasriya/atomix";
 import { CacheData, CacheFlavor, CacheScope } from "../docs/docs";
 import BackupStream from "./helpers/BackupStream";
-import KVCacheRecord from "../memory/kv/record";
-import FileCacheRecord from "../memory/files/file";
+import KVCacheRecord from "../flavors/kvs/kvs.record";
+import FileCacheRecord from "../flavors/files/files.record";
 
 export interface PersistanceStorageServices {
     local: {

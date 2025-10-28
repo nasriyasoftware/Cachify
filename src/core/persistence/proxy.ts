@@ -1,28 +1,30 @@
 import cachify from "../../cachify";
 import atomix from "@nasriya/atomix";
 import constants from "../consts/consts";
-import persistenceManager from "./persistence.manager";
+import PersistenceManager from "./persistence.manager";
 import type { CacheFlavor } from "../docs/docs";
 import type { ProxyBackupParameters, ProxyRestoreParameters, StorageServices } from "./docs";
 
-const hasOwnProperty = atomix.dataTypes.record.hasOwnProperty;
-
 class PersistenceProxy {
+    readonly #_manager: PersistenceManager;
+
+    constructor(manager: PersistenceManager) { this.#_manager = manager }
+    
     readonly #_helpers = {
         validate: {
             backupData: (data: unknown) => {
                 if (!atomix.valueIs.record(data)) { throw new TypeError(`The "data" argument must be a record, but instead got ${typeof data}`) }
 
-                if (hasOwnProperty(data, 'source')) {
+                if (atomix.dataTypes.record.hasOwnProperty(data, 'source')) {
                     const source = data.source;
-                    if (!atomix.valueIs.string(source)) { throw new TypeError(`The "source" property of the "data" object must be a string, but instead got ${typeof source}`) }
-                    if (!constants.CACHE_FLAVORS.includes(source as CacheFlavor)) { throw new RangeError(`The "source" property of the "data" object must be one of the following values: ${constants.CACHE_FLAVORS.join(', ')}`) }
+                    if (!atomix.valueIs.string(source)) { throw new TypeError(`The "initiator" property of the "data" object must be a string, but instead got ${typeof source}`) }
+                    if (!constants.CACHE_FLAVORS.includes(source as CacheFlavor)) { throw new RangeError(`The "initiator" property of the "data" object must be one of the following values: ${constants.CACHE_FLAVORS.join(', ')}`) }
                     if (!(source in cachify)) { throw new Error(`The cache flavor "${source}" is not implemented yet by cachify.`) }
                 } else {
-                    throw new SyntaxError(`The "source" property of the "data" object is required and missing.`);
+                    throw new SyntaxError(`The "initiator" property of the "data" object is required and missing.`);
                 }
 
-                if (hasOwnProperty(data, 'content')) {
+                if (atomix.dataTypes.record.hasOwnProperty(data, 'content')) {
                     const content = data.content;
                     if (!(content instanceof Map)) { throw new TypeError(`The "content" property of the "data" object must be a Map, but instead got ${typeof content}`) }
                 } else {
@@ -44,10 +46,10 @@ class PersistenceProxy {
         this.#_helpers.validate.backupData(data);
         this.#_helpers.validate.service(to);
 
-        const driver = persistenceManager.getDriver(to);
+        const driver = this.#_manager.getDriver(to);
         if (!driver) { throw new Error(`The provided storage service (${to}) is not implemented.`) }
 
-        const backupStream = persistenceManager.createBackupStream();
+        const backupStream = this.#_manager.createBackupStream();
 
         // Pass the stream to the backup() BEFORE writing data
         const backupPromise = driver.backup(
@@ -80,7 +82,7 @@ class PersistenceProxy {
         const [flavor, from, ...rest] = args;
         this.#_helpers.validate.service(from);
 
-        const driver = persistenceManager.getDriver<S>(from);
+        const driver = this.#_manager.getDriver<S>(from);
         if (!driver) { throw new Error(`The provided storage service (${from}) is not implemented.`) }
 
         // @ts-ignore - backup method signature is safe for the given storage type `S`
@@ -88,5 +90,4 @@ class PersistenceProxy {
     }
 }
 
-const persistenceProxy = new PersistenceProxy();
-export default persistenceProxy;
+export default PersistenceProxy;

@@ -12,14 +12,31 @@ Made with ❤️ in **Palestine** 🇵🇸
 ___
 ## Overview
 
-Cachify is a **fast, flexible caching library for Node.js** that supports:
+Cachify is a fast, flexible caching library for Node.js that supports both key-value and file caching across multiple storage backends, with built-in lifecycle management and persistence.  
+This documentation covers the essential concepts, setup, and best practices to get started quickly and efficiently.
 
-- **Key-value and file caching**  
-- **Multiple storage backends** (memory, Redis, or custom engines)  
-- **Automatic file lifecycle management**  
-- **Persistence and cold-start recovery**  
+### Contents
 
-Cachify makes caching **simple, reliable, and extensible**, giving developers a unified API for all caching needs.
+- [Cachify](#cachify)
+        - [Visit us at www.nasriya.net.](#visit-us-at-wwwnasriyanet)
+  - [Overview](#overview)
+    - [Contents](#contents)
+  - [Why Cachify and When to Use It](#why-cachify-and-when-to-use-it)
+    - [Key Advantages](#key-advantages)
+    - [When to Use Cachify Instead of Just Redis](#when-to-use-cachify-instead-of-just-redis)
+  - [Installation \& Importing](#installation--importing)
+    - [Installation](#installation)
+  - [Importing](#importing)
+  - [Usage](#usage)
+    - [1. Creating Clients (Isolation)](#1-creating-clients-isolation)
+    - [2. Registering Storage Engines](#2-registering-storage-engines)
+    - [3. Default Storage Engines](#3-default-storage-engines)
+    - [4. Caching (KVS \& Files)](#4-caching-kvs--files)
+    - [5. Persistence \& Cold Start Recovery](#5-persistence--cold-start-recovery)
+  - [Testing](#testing)
+    - [Required Environment Variables](#required-environment-variables)
+    - [Running Tests](#running-tests)
+  - [License](#license)
 
 > [!IMPORTANT]
 > 
@@ -32,40 +49,32 @@ Cachify makes caching **simple, reliable, and extensible**, giving developers a 
 
 ___
 
-## Why Cachify?
+## Why Cachify and When to Use It
 
-Cachify is designed to go **beyond traditional key-value caching** like Redis. While Redis is powerful, Cachify provides unique features that make it ideal for certain use cases:
+Cachify goes **beyond traditional key-value caching** like Redis, offering a unified, flexible, and highly extensible caching solution for Node.js.
 
-- **Unified caching for keys and files**  
-  Cachify handles **both key-value pairs and files**. You can even store files in Redis or other backends without extra effort — developers just pass the file path, and Cachify retrieves it automatically.
+### Key Advantages
 
-- **Multi-storage support**  
-  Combine **memory, Redis, and custom storage engines** with redundancy, fast reads, and failover out of the box.
+- **Unified caching for keys and files**: Cache key-value pairs and files in memory, Redis, or other backends seamlessly.  
+- **Multi-storage support**: Combine memory, Redis, and custom engines for redundancy, failover, and multi-region setups.  
+- **Automated file lifecycle management**: Automatic revalidation, eviction, and TTL handling.  
+- **Persistence & cold-start recovery**: Backup and restore your cache to survive application restarts without rebuilding.  
+- **Extensibility**: Easily plug in custom storage engines or adapters.  
+- **Fastest read-first strategy**: Queries multiple backends and returns the first successful result to optimize latency.  
+- **Isolation**: Multiple cache clients can coexist safely, even when sharing storage engines like Redis.
 
-- **Automated file lifecycle management**  
-  Cached files are automatically **revalidated on changes** and **removed when deleted**, saving you from writing extra housekeeping logic.
-
-- **Persistence & cold-start recovery**  
-  With **backup and restore adapters**, your cache survives application restarts, providing near-instant startup without rebuilding the cache.
-
-- **Extensibility**  
-  Implement **custom storage engines** and integrate them seamlessly. Cachify is flexible and adaptable to your architecture.
-
-- **Fastest read-first strategy**  
-  When reading from multiple backends, Cachify returns the **first successful response**, optimizing latency automatically.
-
----
-
-## When to Use Cachify Instead of Just Redis
+### When to Use Cachify Instead of Just Redis
 
 - You need **file caching in memory or Redis**, with **automatic retrieval by file path**.  
 - You want **automatic file revalidation** without writing extra watchers.  
 - Your application requires **multi-storage redundancy** or **fastest-response reads** across multiple backends.  
 - You need **persistent caching** that survives cold starts without rebuilding.  
-- You want a **Node.js-native, highly extensible caching library** that works with Redis but also handles scenarios Redis alone cannot.
+- You want a **Node.js-native, highly extensible caching library** that complements or goes beyond Redis.
 
----
-## Installation
+
+___
+## Installation & Importing
+### Installation
 
 ```bash
 npm install @nasriya/cachify
@@ -81,115 +90,242 @@ Importing in **CommonJS** modules
 ```js
 const cachify = require('@nasriya/cachify').default;
 ```
----
+___
 
 ## Usage
+This section guides you through Cachify’s core usage in a logical order.
+
+### 1. Creating Clients (Isolation)
+
+The imported `cachify` object is an instance of the **`Cachify`** class,  
+which **extends `CachifyClient`**. It behaves like a cache client but also provides global utilities such as debugging, configuration, and client creation.
+
+You can create **isolated clients** for independent caches — useful for multi-tenant systems, different environments, or testing.
+
+
 ```js
 import cachify from '@nasriya/cachify';
 
-// Setting and reading a key-value pair
-await cachify.kv.set('key', 'value');           // Set a key-value pair in memory
-const value = await cachify.kv.get('key');      // Get a key-value pair from memory
-console.log(value);                             // Output: 'value'
+// Create an isolated instance
+const isolated = cachify.createClient();
 
-// Setting and reading a file
-await cachify.files.set('path/to/file');        // Set a file cache record in memory
+// Each instance maintains its own managers, engines, and configurations
+await isolated.kvs.set('1', 'value');
+await cachify.kvs.get('1'); // ❌ undefined — isolated from the other instance
 
-// Inspect a file cache record from memory
-const fileRecord = await cachify.files.inspect({ filePath: 'path/to/file' });
-
-// Read a file from memory
-const readResult = await cachify.files.read({ filePath: 'path/to/file' }); 
-console.log(readResult);
-/**
- * {
- *    "status": "miss" | "hit",
- *    "content": Buffer
- * }
- */
+// Both share the same API surface, but only `cachify` includes utilities like:
+console.log(cachify.debug);         // Access global debug utilities
+console.log(cachify.createClient);  // Create new isolated clients
 ```
 
-### Using Redis as storage engine
-```js
-import cachify from '@nasriya/cachify';
+**Notes:**
+- Isolated clients behave like `CachifyClient` instances but also include additional properties and methods from `Cachify`, such as `debug` and `createClient`.
+- All usage patterns shown for the global `cachify` instance apply to isolated clients.
+- Useful for multi-tenant systems, testing, or environments requiring independent caches.
 
+### 2. Registering Storage Engines
+Before storing or reading records in a backend like Redis, you must register your storage engines:
+
+```js
+import { createClient } from '@redis/client';
+
+// Create Redis clients
+const redisEU = createClient({ url: process.env.REDIS_EU });
+const redisUS = createClient({ url: process.env.REDIS_US });
+
+// Register the clients with Cachify
 cachify.engines.useRedis('redis-eu', redisEU);
 cachify.engines.useRedis('redis-us', redisUS);
 
-// Setting and reading a key-value pair
-await cachify.kv.set('foo1', 'bar1', { storeIn: ['redis-eu', 'redis-us'] });
-await cachify.kv.set('foo2', 'bar2', { storeIn: ['memory', 'redis-eu', 'redis-us'] });
-
-const foo1 = await cachify.kv.get('foo1');
-const foo2 = await cachify.kv.get('foo2');
-
-console.log(foo1); // Output: 'bar1'
-console.log(foo2); // Output: 'bar2'
+// Register a custom engine
+cachify.engines.defineEngine('custom-engine', {
+    onSet: async (record, value, context) => {
+        context.set(record.key, value);
+    },
+    onRead: async (record, context): Promise<any> => {
+        return context.get(record.key);
+    },
+    onRemove: async (record, context): Promise<void> => {
+        if (context.has(record.key)) { context.delete(record.key) }
+    }
+});
 ```
 
 **Notes:**
-- **`storeIn`**: Specify which storage engines to write to. Cachify will store the value in **all selected backends**.  
-- **Fastest read wins**: When reading, Cachify queries all available storages and returns the **first successful result**.  
-- **Redundancy**: Using multiple Redis servers ensures **high availability** — if one fails, the other can serve the request.  
-- Works with **key-value caching** and **file caching**.
+- Any backend (e.g., Redis) must be registered with Cachify before use.
+- Names used in `storeIn` or `defaultEngines` must exactly match registered engine names.
+- Attempting to use an unregistered engine will throw an error at runtime.
+- Redis integration is optional; Cachify defaults to in-memory storage if no backend is configured.
 
-### Persistence / Cold Start Recovery
-Cachify supports persistent caching, allowing you to backup and restore the entire cache — including both key-value pairs and files. This ensures your application can recover cached data after a cold start.
+### 3. Default Storage Engines
+You can set default engines for any record manager (kvs, files, etc.) to avoid specifying storeIn on every operation:
 
 ```js
-import cachify from '@nasriya/cachify';
-import path from "path";
+// For key-value records
+cachify.kvs.defaultEngines = 'redis-eu';
 
-const backupFileName = 'cars';
-const testFilePath = path.join(process.cwd(), 'test', 'sample.txt');
+// Or multiple engines
+cachify.kvs.defaultEngines = ['redis-eu'];
 
-// Register the local persistence adapter
-cachify.persistence.use('local', { path: process.cwd() });
+// Redundant / multi-region setup
+cachify.kvs.defaultEngines = ['redis-eu', 'redis-us'];
 
-// ----------------------------
-// Setting cache records
-// ----------------------------
-await cachify.kv.set('a', 1);
-await cachify.files.set(testFilePath);
-
-// ----------------------------
-// Backup cache
-// ----------------------------
-await cachify.persistence.backup('local', backupFileName);
-console.log('Backup complete.');
-
-// ----------------------------
-// Clear in-memory cache
-// ----------------------------
-await cachify.clear();
-console.log('Cache cleared.');
-
-// ----------------------------
-// Restore cache
-// ----------------------------
-await cachify.persistence.restore('local', backupFileName);
-console.log('Cache restored.');
-
-// ----------------------------
-// Access restored data
-// ----------------------------
-console.log(await cachify.kv.get('a'));          // Output: 1
-const fileResponse = await cachify.files.read({ filePath: testFilePath });
-console.log(fileResponse);
-/**
- * {
- *    status: "hit" | "miss",
- *    content: Buffer
- * }
- */
+// For file records
+cachify.files.defaultEngines = 'redis-eu';
+cachify.files.defaultEngines = ['redis-eu', 'redis-us'];
 ```
 
 **Notes:**
-- **Backup**: Saves the entire cache (key-value and files) to the configured persistence adapter.  
-- **Restore**: Reloads all cached data, enabling seamless recovery after a cold start.  
-- Currently supports the **`local` adapter**; cloud adapters (e.g., S3) are planned.  
-- Works with **all cache flavors**, providing redundancy and fast cold-start recovery.
+- Operations without a `storeIn` option automatically use the defined `defaultEngines`.
+- Applies to all record managers (`kvs`, `files`, and custom managers).
+- Multiple engines allow redundancy, failover, or multi-region caching.
+- Engines must be registered before assigning them as defaults.
+- Simplifies code and ensures consistent storage behavior across operations.
 
+### 4. Caching (KVS & Files)
+Key-Value Caching (KVS)
+
+```js
+// Recommended: set a record in the "users" scope
+await cachify.kvs.set('1', { name: 'Ahmad' }, { scope: 'users' });
+
+// Retrieve from the same scope
+const user = await cachify.kvs.get('1', 'users');
+console.log(user); // { name: 'Ahmad' }
+
+// Optional: store in multiple backends
+await cachify.kvs.set('2', { name: 'Omar' }, { scope: 'users', storeIn: ['memory', 'redis-eu'] });
+const user2 = await cachify.kvs.get('2', 'users');
+console.log(user2); // { name: 'Omar' }
+
+// Scopes are optional — default is "global"
+await cachify.kvs.set('site', { name: 'Cachify' });
+const site = await cachify.kvs.get('site');
+console.log(site); // { name: 'Cachify' }
+```
+
+File Caching
+
+```js
+const filePath = 'path/to/file.txt';
+
+// Cache a file in the "documents" scope
+await cachify.files.set(filePath, { scope: 'documents' });
+
+// Inspect file metadata
+const fileRecord = cachify.files.inspect({ filePath, scope: 'documents' });
+console.log(fileRecord);
+
+// Read file content (status: "miss" if loaded from disk, "hit" if cached)
+const readResult = await cachify.files.read({ filePath, scope: 'documents' });
+console.log(readResult);
+
+// Scopes are optional — caches in default "global" scope
+await cachify.files.set(filePath);
+```
+
+**Notes:**
+- **Scopes are optional**; if omitted, the `"global"` scope is used.
+- Scopes allow logical separation of data without polluting record keys (e.g., `"users"`,`"orders"`, `"documents"`).
+- `kvs` is the plural API for key-value operations.
+- File caching separates **metadata** from **content**, which is loaded on read.
+- `storeIn` allows targeting multiple backends for redundancy, failover, or multi-region caching.
+  
+### 5. Persistence & Cold Start Recovery
+Cachify supports persistent caching via adapters (e.g., local, S3) to backup and restore caches:
+```js
+import path from 'path';
+
+const backupName = 'cars';
+const testFilePath = path.join(process.cwd(), 'test', 'sample.txt');
+
+// Register persistence adapters
+cachify.persistence.use('local', { path: process.cwd() });
+
+// Set some records
+await cachify.kvs.set('a', 1);
+await cachify.files.set(testFilePath);
+
+// Backup cache
+await cachify.persistence.backup('local', backupName);
+
+// Clear memory
+await cachify.clear();
+
+// Restore cache
+await cachify.persistence.restore('local', backupName);
+
+// Access restored data
+console.log(await cachify.kvs.get('a')); // 1
+const fileResponse = await cachify.files.read({ filePath: testFilePath });
+console.log(fileResponse); // { status: 'hit' | 'miss', content: Buffer }
+```
+
+**Notes:**
+- Backup saves all key-value and file caches to the configured persistence adapter.
+- Restore reloads all cached data, enabling fast recovery after cold starts.
+- Works with multiple cache flavors and storage backends.
+- Cloud adapters (e.g., S3) can be registered similarly to local adapters for persistent storage.
+
+___
+## Testing
+To run Cachify tests locally, you need to create an environment file at `tests/setup/test.env`
+
+
+### Required Environment Variables
+
+- **Redis Testing**
+  - `REDIS_TEST_URL` — The URL of a Redis server for running tests.
+  - ⚠️ The Redis server will be flushed before tests start, so **do not use a production Redis instance**.
+
+- **Amazon S3 Persistence Testing (Optional)**
+  - `S3_TEST_BUCKET` — The bucket name to use for tests.
+  - `S3_TEST_REGION` — The AWS region of the bucket.
+  - `S3_TEST_KEY` — AWS access key ID.
+  - `S3_TEST_SECRET` — AWS secret access key.
+
+### Running Tests
+
+After creating and populating the env file, simply run:
+
+```bash
+npm test
+```
+
+___
+
+## Benchmarking
+
+Cachify provides a built-in benchmarking suite to measure the performance of key-value and file caching across different storage engines.
+
+### Environment Setup
+
+You can optionally create an environment file at `benchmarks/benchmarks.env`. This file allows you to customize benchmark parameters. If it’s missing, Cachify will automatically fall back to safe defaults.
+
+### Optional Environment Variables
+
+- `BENCHMARK_KV_COUNT` — Number of key-value records to benchmark. Default: `100000`
+- `BENCHMARK_FILES_COUNT` — Number of file records to benchmark. Default: `1000`
+- `BENCHMARK_OUT_DIR` — Directory to store benchmark results. Default: `${process.cwd()}/cachify/benchmarks-results`
+- `REDIS_BENCHMARK_URL` — Redis connection URL to include Redis in the benchmarks.  
+  If omitted, all benchmarks will run in-memory only.
+
+> [!WARNING]
+> **Redis Safety Notice**  
+> When `REDIS_BENCHMARK_URL` is defined, Cachify will **flush the Redis database** before starting the benchmarks to ensure accurate results.  
+> 
+> ⚠️ **Never use a production Redis server for benchmarking!**  
+> Use a dedicated or disposable Redis instance instead, as **all data will be permanently deleted**.
+> 
+### Running Benchmarks
+
+Once ready, simply run:
+
+```bash
+npm run benchmark
+```
+
+This command runs the full benchmark suite and outputs performance results — including read/write throughput and engine comparison — to the directory defined in `BENCHMARK_OUT_DIR` (or the default if not set).
 ___
 ## License
 This software is licensed under the **Nasriya Personal & Commercial License (NPCL)**, version 1.0.

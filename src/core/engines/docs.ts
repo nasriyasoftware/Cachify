@@ -5,9 +5,9 @@ export type EngineStorageRecord<E> = {
 };
 
 export interface StorageEngineHandlers<E> {
-    onSet: (record: CacheRecord, value: any, context: EngineStorageContext<E>) => Promise<any>;
-    onRead: (record: CacheRecord, context: EngineStorageContext<E>) => Promise<any>;
-    onRemove: (record: CacheRecord, context: EngineStorageContext<E>) => Promise<void>;
+    onSet: (record: CacheRecord, value: any, context?: EngineStorageContext<E>) => Promise<any>;
+    onRead: (record: CacheRecord, context?: EngineStorageContext<E>) => Promise<any>;
+    onRemove: (record: CacheRecord, context?: EngineStorageContext<E>) => Promise<void>;
 }
 
 export interface EngineStorageContext<Entry> {

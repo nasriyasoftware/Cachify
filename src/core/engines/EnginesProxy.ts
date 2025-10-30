@@ -81,6 +81,9 @@ class EnginesProxy {
                     }
                 } catch (error) {
                     // Ignore or log the error if debugging
+                    if (cachify.debug) {
+                        console.debug(`[Cachify:Leachers] Failed to resolve leacher for "${leacherKey}":`, error);
+                    }
                 }
             }
         }
@@ -154,6 +157,7 @@ class EnginesProxy {
      * @since v1.0.0
      */
     async remove(record: CacheRecord): Promise<void> {
+        if (!record) { return }
         const queue = this.#_helpers.getTaskQueue(record.key as QueueKey);
         const taskId = `remove_${record.key as QueueKey}`;
 
@@ -203,7 +207,7 @@ class EnginesProxy {
                     }
 
                     if (errors.length > 0 && debug) {
-                        console.debug(`Failed to remove record "${record.key}" from all engines:\n${summary}`);
+                        console.debug(`Failed to remove record "${record.key}" from engines:\n${summary}`);
                     }
                 },
                 onResolve: () => {
@@ -276,7 +280,7 @@ class EnginesProxy {
                                 } else {
                                     if (debug) console.debug(`Engine "${engineName}" returned undefined.`);
                                     const error = new EngineError(`Engine "${engineName}" returned undefined.`);
-                                    error.cause = 'ADAPTER_UNDEFINED_VALUE';
+                                    error.cause = 'ENGINE_UNDEFINED_VALUE';
                                     engineRejecter(error);
                                 }
                             }).catch(err => {
@@ -296,7 +300,7 @@ class EnginesProxy {
                         if (mainError instanceof AggregateError) {
                             const errors = mainError.errors;
 
-                            const isUndefinedValueError = (err: unknown): err is EngineError => err instanceof EngineError && err.cause === 'ADAPTER_UNDEFINED_VALUE';
+                            const isUndefinedValueError = (err: unknown): err is EngineError => err instanceof EngineError && err.cause === 'ENGINE_UNDEFINED_VALUE';
                             const undefinedValueErrors = errors.filter(isUndefinedValueError);
 
                             if (undefinedValueErrors.length === errors.length) {

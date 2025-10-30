@@ -2,7 +2,7 @@ import IdleConfig from "../configs/strategies/idle/IdleConfig";
 import EvictConfig from "../configs/strategies/evict/EvictConfig";
 import * as constants from "../consts/consts";
 import { CacheRecord } from "../docs/docs";
-import { EventsManager, RemoveEvent } from "../events/docs";
+import { EventsManager } from "../events/docs";
 import KVCacheRecord from "./kvs/kvs.record";
 import FileCacheRecord from "./files/files.record";
 import { FilesEventsManager } from "../events/managers/files/FilesEventsManager";
@@ -97,6 +97,18 @@ class CacheHelpers {
                     return Number(countA - countB);
                 });
             }
+        },
+        createIterator: function* (recordsMap: Map<string, Map<string, CacheRecord>>) {
+            for (const [_, scopeMap] of recordsMap) {
+                for (const [_, record] of scopeMap) {
+                    yield { map: scopeMap, record };
+                }
+            }
+        },
+        estimateSize: (key: string, value: unknown) => {
+            const keyLength = Buffer.byteLength(key);
+            const valueLength = this.estimateValueSize(value);
+            return keyLength + valueLength;
         }
     }
 

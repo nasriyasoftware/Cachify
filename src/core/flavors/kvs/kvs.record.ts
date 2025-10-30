@@ -5,6 +5,7 @@ import KVsEventsManager from "../../events/managers/kvs/KVsEventsManager";
 import EnginesProxy from "../../engines/EnginesProxy";
 import TTLItemConfig from "../../configs/strategies/ttl/TTLItemConfig";
 import type { KVSetConfigs } from "./docs";
+import helpers from "../helpers";
 
 class KVCacheRecord {
     readonly #_flavor: 'kvs' = 'kvs';
@@ -18,6 +19,7 @@ class KVCacheRecord {
     #_initialized = false;
 
     readonly #_stats = {
+        size: 0,
         dates: {
             created: 0,
             expireAt: undefined as number | undefined,
@@ -81,6 +83,7 @@ class KVCacheRecord {
     async _init(value: unknown, preload: boolean) {
         try {
             if (this.#_initialized) { return }
+            this.#_stats.size = helpers.records.estimateSize(this.#_key, value);
             await this.#_proxy.set(this, value);
             this.#_helpers.refreshTTL();
             await this.#_events.emit.create(this, { preload: preload });

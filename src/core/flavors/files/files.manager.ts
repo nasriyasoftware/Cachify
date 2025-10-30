@@ -7,7 +7,7 @@ import FilesEventsManager from "../../events/managers/files/FilesEventsManager";
 import helpers from "../helpers";
 
 import { CacheStatusChangeHandler, TTLFileOptions } from "../../configs/strategies/docs";
-import { BaseQueueTask, TasksQueue } from "@nasriya/atomix/tools";
+import { AdaptiveTaskQueue, BaseQueueTask, TasksQueue } from "@nasriya/atomix/tools";
 import { FileContentSizeChangeEvent } from "../../events/docs";
 
 import EnginesProxy from "../../engines/EnginesProxy";
@@ -17,6 +17,7 @@ import constants from "../../consts/consts";
 import type { BlockingFlags, BlockingProcess, CacheFlavor, CacheManagerAssets, CachePreloadInitiator } from "../../docs/docs";
 import type { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import type { FileKeyOptions, FileNormalSetConfigs, FileNormalSetOptions, FileOptions, FilePathOptions, FilePreloadRestoreSetConfigs, FilePreloadRestoreSetOptions, FilePreloadSetConfigs, FilePreloadSetOptions, FilePreloadWarmupSetConfigs, FilePreloadWarmupSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
+import cachify from "../../../cachify";
 
 const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
@@ -367,7 +368,7 @@ class FilesCacheManager {
                                 if (hasOwnProp(ttl, 'policy')) {
                                     if (!atomix.valueIs.string(ttl.policy)) { throw new TypeError(`The "policy" property of the "ttl" object (when provided) must be a string, but instead got ${typeof ttl.policy}`) }
                                     if (!['evict', 'keep'].includes(ttl.policy)) { throw new RangeError(`The "policy" property of the "ttl" object (when provided) must be either "evict" or "keep", but instead got ${ttl.policy}`) }
-                                    configs.ttl.policy = ttl.policy ;
+                                    configs.ttl.policy = ttl.policy;
                                 }
 
                                 if (hasOwnProp(ttl, 'sliding')) {
@@ -683,7 +684,7 @@ class FilesCacheManager {
         try {
             atomix.fs.canAccessSync(filePath, { throwError: true, permissions: 'Read' });
             const configs: FileSetConfigs = this.#_helpers.setMethod.validate.options(key, this.#_configs, options);
-            
+
             this.#_helpers.cacheManagement.eviction.scheduleEvictionCheck().catch(err => {
                 if (err?.message !== 'Debounced function cancelled') { throw err }
             });
@@ -863,27 +864,31 @@ class FilesCacheManager {
                 }
             })();
 
-            const queue = new TasksQueue({ autoRun: true, concurrencyLimit: 1000 });
+            const iterator = helpers.records.createIterator(records);
+            const queue = new AdaptiveTaskQueue({ autoRun: true });
 
-            for (const [_, scopeMap] of records) {
-                for (const [_, record] of scopeMap) {
-                    this.#_stats.counts.read -= record.stats.counts.read;
-                    this.#_stats.counts.touch -= record.stats.counts.touch;
-                    this.#_stats.counts.update -= record.stats.counts.update;
-                    this.#_stats.counts.hit -= record.stats.counts.hit;
-                    this.#_stats.counts.miss -= record.stats.counts.miss;
+            for (const { record } of iterator) {
+                queue.addTask({
+                    id: `${record.scope}:${record.key}`,
+                    type: 'remove',
+                    action: async () => {
+                        if (cachify.debug) {
+                            console.debug(`Removing ${record.scope}:${record.key}`);
+                        }
 
-                    const task: BaseQueueTask = {
-                        id: `${record.scope}:${record.key}`,
-                        type: 'remove',
-                        action: async () => await this.#_helpers.createRemovePromise(record.key, record.scope),
-                        onReject: (error) => console.error(error),
-                    }
+                        this.#_stats.counts.read -= record.stats.counts.read;
+                        this.#_stats.counts.touch -= record.stats.counts.touch;
+                        this.#_stats.counts.update -= record.stats.counts.update;
+                        this.#_stats.counts.hit -= record.stats.counts.hit;
+                        this.#_stats.counts.miss -= record.stats.counts.miss;
 
-                    queue.addTask(task);
-                }
+                        await this.#_events.emit.remove(record as FileCacheRecord, { reason: 'manual' })
+                    },
+                    onReject: (error) => console.error(error),
+                })
             }
 
+            queue.run();
             await queue.untilComplete();
             if (this.size === 0) {
                 (this.#_helpers.cacheManagement.eviction.scheduleEvictionCheck as any).cancel();

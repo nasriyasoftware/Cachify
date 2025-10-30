@@ -9,13 +9,14 @@ import constants from "../../consts/consts";
 import utils from "../../../utils/utils";
 
 import { CacheStatusChangeHandler, TTLKVOptions } from "../../configs/strategies/docs";
-import { TasksQueue, BaseQueueTask } from "@nasriya/atomix/tools";
+import { AdaptiveTaskQueue, BaseQueueTask } from "@nasriya/atomix/tools";
 
 import EnginesProxy from "../../engines/EnginesProxy";
 import PersistenceProxy from "../../persistence/proxy";
 import type { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import type { BlockingFlags, BlockingProcess, CacheManagerAssets, CachePreloadInitiator } from "../../docs/docs";
 import type { KVSetOptions, KVSetConfigs, KVNormalSetConfigs, KVNormalSetOptions, KVPreloadWarmupSetOptions, KVPreloadWarmupSetConfigs, KVPreloadRestoreSetOptions, KVPreloadRestoreSetConfigs, KVPreloadSetConfigs } from "./docs";
+import cachify from "../../../cachify";
 
 const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
@@ -165,10 +166,12 @@ class KVsCacheManager {
                 await this.#_memoryManager.helpers.applyDelta(delta);
             },
             remove: async (record: KVCacheRecord) => {
-                if (!record.engines.includes('memory')) { return }
-                const res = await this.#_enginesProxy.read(record);
-                const size = this.#_memoryManager.helpers.getRecordSize(record.key, res.value);
-                await this.#_memoryManager.helpers.applyDelta(-size);
+                if (record) {
+                    if (!record.engines.includes('memory')) { return }
+                    await this.#_memoryManager.helpers.applyDelta(-record.stats.size);
+                } else {
+                    console.warn('[WARN] Attempted to remove a record that does not exist. Likely as a result of a race condition.');
+                }
             },
             create: async (record: KVCacheRecord) => {
                 if (!record.engines.includes('memory')) { return }
@@ -338,6 +341,7 @@ class KVsCacheManager {
                                 preload: true,
                                 ...rest,
                                 stats: {
+                                    size: 0,
                                     dates: {
                                         created: 0,
                                         expireAt: undefined as number | undefined,
@@ -522,7 +526,7 @@ class KVsCacheManager {
         this.#_defaultEngines.push(...defaults);
     }
 
-    
+
     /**
      * @returns The list of default engines.
      * @since v1.0.0
@@ -690,23 +694,26 @@ class KVsCacheManager {
                 }
             })();
 
-            const queue = new TasksQueue({ autoRun: true, concurrencyLimit: 1000 });
+            const iterator = helpers.records.createIterator(records);
+            const queue = new AdaptiveTaskQueue({ autoRun: true });
 
-            for (const [_, scopeMap] of records) {
-                for (const [_, record] of scopeMap) {
-                    this.#_stats.counts.read -= record.stats.counts.read;
-                    this.#_stats.counts.touch -= record.stats.counts.touch;
-                    this.#_stats.counts.update -= record.stats.counts.update;
+            for (const { record } of iterator) {
+                queue.addTask({
+                    id: `${record.scope}:${record.key}`,
+                    type: 'remove',
+                    action: async () => {
+                        if (cachify.debug || true) {
+                            console.debug(`Removing ${record.scope}:${record.key}`);
+                        }
 
-                    const task: BaseQueueTask = {
-                        id: `${record.scope}:${record.key}`,
-                        type: 'remove',
-                        action: async () => await this.#_helpers.createRemovePromise(record.key, record.scope),
-                        onReject: (error) => console.error(error),
-                    }
+                        this.#_stats.counts.read -= record.stats.counts.read;
+                        this.#_stats.counts.touch -= record.stats.counts.touch;
+                        this.#_stats.counts.update -= record.stats.counts.update;
 
-                    queue.addTask(task);
-                }
+                        await this.#_events.emit.remove(record as KVCacheRecord, { reason: 'manual' })
+                    },
+                    onReject: (error) => console.error(error),
+                })
             }
 
             await queue.untilComplete();
@@ -721,8 +728,6 @@ class KVsCacheManager {
             this.#_flags.blocking.clearing = false;
         }
     }
-
-
     /**
      * Exports all cached records to the specified persistent storage service.
      *

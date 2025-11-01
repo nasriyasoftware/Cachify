@@ -1,9 +1,9 @@
 import FileCacheRecord from "../flavors/files/files.record";
-import { EvictionMode } from "../configs/strategies/evict/EvictConfig";
-import { CacheFlavor, CacheMetaData, CacheRecord, RefreshableCacheRecord } from "../docs/docs";
 import KVCacheRecord from "../flavors/kvs/kvs.record";
-import { KVRemovalReason } from "./managers/kvs/docs";
-import { FileRemovalReason } from "./managers/files/docs";
+import type { EvictionMode } from "../configs/strategies/evict/EvictConfig";
+import type { CacheFlavor, CacheRecord, RefreshableCacheRecord } from "../docs/docs";
+import type { KVRemovalReason } from "./managers/kvs/docs";
+import type { FileRemovalReason } from "./managers/files/docs";
 
 import KVsEventsManager from "./managers/kvs/KVsEventsManager";
 import FilesEventsManager from "./managers/files/FilesEventsManager";
@@ -22,6 +22,7 @@ export interface CacheEvents<T extends CacheRecord = CacheRecord> {
     touch: { payload: TouchEvent<T>, type: 'touch' };
     // invalidate: { payload: InvalidateEvent<T>, type: 'invalidate' }; // NOTE: This event is emitted as part of the `remove` event
     remove: { payload: RemoveEvent<T>, type: 'remove' };
+    bulkRemove: { payload: BulkRemoveEvent<T>, type: 'bulkRemove' };
     fileContentSizeChange: { payload: FileContentSizeChangeEvent, type: 'fileContentSizeChange' };
 }
 
@@ -47,6 +48,11 @@ export type KVCacheRecordJSON = ReturnType<KVCacheRecord['toJSON']>;
 interface BaseCacheEvent<T extends CacheRecord> {
     item: ReturnType<T['toJSON']>;
     flavor: CacheFlavor;
+}
+
+interface BaseBulkCacheEvent<T extends CacheRecord> {
+    items: BaseCacheEvent<T>['item'][];
+    flavor: BaseCacheEvent<T>['flavor'];
 }
 
 export interface CreateEvent<T extends CacheRecord> extends BaseCacheEvent<T> {
@@ -102,6 +108,11 @@ export interface InvalidateEvent<T extends CacheRecord> extends BaseCacheEvent<T
 
 export interface RemoveEvent<T extends CacheRecord> extends BaseCacheEvent<T> {
     type: 'remove';
+    reason: RemovalReasons<T>;
+}
+
+export interface BulkRemoveEvent<T extends CacheRecord> extends BaseBulkCacheEvent<T> {
+    type: 'bulkRemove';
     reason: RemovalReasons<T>;
 }
 

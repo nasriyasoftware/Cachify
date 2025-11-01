@@ -1,4 +1,3 @@
-import cachify from "../../../cachify";
 import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
@@ -10,7 +9,7 @@ import constants from "../../consts/consts";
 import utils from "../../../utils/utils";
 
 import type { CacheStatusChangeHandler, TTLKVOptions } from "../../configs/strategies/docs";
-import { AdaptiveTaskQueue, BaseQueueTask } from "@nasriya/atomix/tools";
+import { BaseQueueTask } from "@nasriya/atomix/tools";
 
 import EnginesProxy from "../../engines/EnginesProxy";
 import PersistenceProxy from "../../persistence/proxy";
@@ -76,6 +75,19 @@ class KVsCacheManager {
                 }
 
                 scopeMap.delete(event.item.key);
+            }, { type: 'beforeAll' });
+
+            this.#_events.on('bulkRemove', async event => {
+                for (const item of event.items) {
+                    const scopeMap = this.#_helpers.records.getScopeMap(item.scope);
+                    const record = scopeMap.get(item.key);
+                    if (record) {
+                        this.#_memoryManager.handle.remove(record);
+                        await this.#_enginesProxy.remove(record);
+                    }
+
+                    scopeMap.delete(item.key);
+                }
             }, { type: 'beforeAll' });
 
             this.#_events.on('update', event => {
@@ -679,7 +691,7 @@ class KVsCacheManager {
         try {
             this.#_helpers.startBlockingProcess('clearing');
 
-            const records = (() => {
+            const recordsMap = (() => {
                 if (scope !== undefined) {
                     if (!atomix.valueIs.string(scope)) { throw new TypeError(`The provided scope (${scope}) is not a string.`) }
                     if (!atomix.valueIs.notEmptyString(scope)) { throw new RangeError(`The provided scope (${scope}) cannot be empty.`) }
@@ -693,29 +705,33 @@ class KVsCacheManager {
                 }
             })();
 
-            const iterator = helpers.records.createIterator(records);
-            const queue = new AdaptiveTaskQueue({ autoRun: true });
+            const iterator = helpers.records.createIterator(recordsMap);
+            const records: KVCacheRecord[] = [];
+            const stats = Object.seal({ read: 0, update: 0, touch: 0 });
 
-            for (const { record } of iterator) {
-                queue.addTask({
-                    id: `${record.scope}:${record.key}`,
-                    type: 'remove',
-                    action: async () => {
-                        if (cachify.debug || true) {
-                            console.debug(`Removing ${record.scope}:${record.key}`);
-                        }
+            const remove = async () => {
+                if (records.length === 0) { return }
+                await this.#_events.emit.bulkRemove(records, { reason: 'manual' });
 
-                        this.#_stats.counts.read -= record.stats.counts.read;
-                        this.#_stats.counts.touch -= record.stats.counts.touch;
-                        this.#_stats.counts.update -= record.stats.counts.update;
+                this.#_stats.counts.read -= stats.read;
+                this.#_stats.counts.update -= stats.update;
+                this.#_stats.counts.touch -= stats.touch;
 
-                        await this.#_events.emit.remove(record as KVCacheRecord, { reason: 'manual' })
-                    },
-                    onReject: (error) => console.error(error),
-                })
+                records.length = stats.read = stats.update = stats.touch = 0;
             }
 
-            await queue.untilComplete();
+            for (const { record } of iterator) {
+                stats.read += record.stats.counts.read;
+                stats.update += record.stats.counts.update;
+                stats.touch += record.stats.counts.touch;
+
+                records.push(record as KVCacheRecord);
+                if (records.length === 1_000) {
+                    await remove();
+                }
+            }
+
+            await remove();
             if (this.size === 0) {
                 (this.#_helpers.cacheManagement.eviction.scheduleEvictionCheck as any).cancel();
                 this.#_events.dispose();
@@ -727,6 +743,7 @@ class KVsCacheManager {
             this.#_flags.blocking.clearing = false;
         }
     }
+
     /**
      * Exports all cached records to the specified persistent storage service.
      *

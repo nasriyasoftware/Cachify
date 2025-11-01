@@ -3,7 +3,7 @@ import cachify from '../../../../cachify';
 import FileCacheRecord from '../../../flavors/files/files.record';
 import { AddHandlerOptions, EventEmitter } from '@nasriya/atomix/tools';
 import { EvictReason, FileContentSizeChangeEvent } from '../../docs';
-import { FileCacheEvent, FileCacheEvents, FileCachePayload, FileCreateEvent, FileHitEvent, FileMissEvent, FileReadEvent, FileRemovalReason, FileRemoveEvent, FileTouchEvent, FileUpdateEvent } from './docs';
+import { FileBulkRemoveEvent, FileCacheEvent, FileCacheEvents, FileCachePayload, FileCreateEvent, FileHitEvent, FileMissEvent, FileReadEvent, FileRemovalReason, FileRemoveEvent, FileTouchEvent, FileUpdateEvent } from './docs';
 
 export class FilesEventsManager {
     readonly #_eventEmitter: EventEmitter;
@@ -29,18 +29,6 @@ export class FilesEventsManager {
      * @since v1.0.0
      */
     async #_emit<E extends FileCacheEvent>(event: E, payload: FileCacheEvents[E]['payload']): Promise<void> {
-        if (!('item' in payload)) {
-            console.log(`Instance: ${payload instanceof FilesEventsManager}`)
-            console.dir(payload, { colors: true, depth: Infinity });
-            const error = new Error('Event payload must have a item property.');
-            error.cause = {
-                event,
-                payload,
-            }
-
-            throw error;
-        }
-
         await this.#_eventEmitter.emit(event, payload);
     }
 
@@ -146,6 +134,28 @@ export class FilesEventsManager {
             const removalReason: FileRemovalReason = options?.reason || 'manual';
             const payload: FileRemoveEvent = { item: record.toJSON(), flavor: record.flavor, type: 'remove', reason: removalReason };
             await this.#_emit('remove', payload);
+        },
+
+        /**
+         * Emits the 'bulkRemove' event when multiple records are removed from the file cache.
+         *
+         * This method creates and emits a payload for the 'bulkRemove' event, including an array of record data and the reason for removal.
+         * 
+         * @param {FileCacheRecord[]} records - An array of file cache records that are being removed.
+         * @param {Object} [options] - The options for the removal event.
+         * @param {FileRemovalReason} [options.reason='manual'] - The reason for the removal. Defaults to 'manual'.
+         * @since v1.0.0
+         */
+        bulkRemove: async (records: FileCacheRecord[], options: { reason: FileRemovalReason } = { reason: 'manual' }) => {
+            const removalReason: FileRemovalReason = options?.reason || 'manual';
+            const payload: FileBulkRemoveEvent = {
+                items: records.map(record => record.toJSON()),
+                flavor: records[0].flavor,
+                type: 'bulkRemove',
+                reason: removalReason
+            }
+
+            await this.#_emit('bulkRemove', payload);
         },
 
 

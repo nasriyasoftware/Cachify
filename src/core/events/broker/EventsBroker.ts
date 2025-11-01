@@ -213,6 +213,18 @@ class EventsBroker {
             remove: (record: KVCacheRecord, options: { reason: KVRemovalReason } = { reason: 'manual' }) => this.#_managers.kvs.emit.remove(record, options),
 
             /**
+             * Emits the 'bulkRemove' event for multiple records being removed from the key-value cache.
+             *
+             * This method creates and emits a payload for the 'bulkRemove' event, including the records' data and the reason for removal.
+             * 
+             * @param {KVCacheRecord[]} records - An array of key-value cache records that are being removed.
+             * @param {Object} [options] - The options for the removal event.
+             * @param {KVRemovalReason} [options.reason='manual'] - The reason for the removal. Defaults to 'manual'.
+             * @since v1.0.0
+             */
+            bulkRemove: (records: KVCacheRecord[], options: { reason: KVRemovalReason } = { reason: 'manual' }) => this.#_managers.kvs.emit.bulkRemove(records, options),
+
+            /**
              * Emits the 'create' event when a record is added to the key-value cache.
              * 
              * This method creates and emits a payload for the 'create' event, including the record's data and whether it was preloaded or not.
@@ -305,6 +317,18 @@ class EventsBroker {
              * @since v1.0.0
              */
             remove: (record: FileCacheRecord, options: { reason: FileRemovalReason } = { reason: 'manual' }) => this.#_managers.files.emit.remove(record, options),
+
+            /**
+             * Emits the 'remove' event for a record being removed from the file cache.
+             *
+             * This method creates and emits a payload for the 'remove' event, including the record's data and the reason for removal.
+             * 
+             * @param {FileCacheRecord} record - The file cache record that is being removed.
+             * @param {Object} [options] - The options for the removal event.
+             * @param {FileRemovalReason} [options.reason='manual'] - The reason for the removal. Defaults to 'manual'.
+             * @since v1.0.0
+             */
+            bulkRemove: (records: FileCacheRecord[], options: { reason: FileRemovalReason } = { reason: 'manual' }) => this.#_managers.files.emit.bulkRemove(records, options),
 
             /**
              * Emits the 'create' event when a file record is added to the file cache.

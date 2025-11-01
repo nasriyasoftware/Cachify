@@ -3,7 +3,7 @@ import cachify from '../../../../cachify';
 import KVCacheRecord from '../../../flavors/kvs/kvs.record';
 import { EvictReason } from '../../docs';
 import { AddHandlerOptions, EventEmitter } from '@nasriya/atomix/tools';
-import { KVCacheEvent, KVCacheEvents, KVCachePayload, KVCreateEvent, KVReadEvent, KVRemovalReason, KVRemoveEvent, KVTouchEvent, KVUpdateEvent } from './docs';
+import { KVBulkRemoveEvent, KVCacheEvent, KVCacheEvents, KVCachePayload, KVCreateEvent, KVReadEvent, KVRemovalReason, KVRemoveEvent, KVTouchEvent, KVUpdateEvent } from './docs';
 
 export class KVsEventsManager {
     readonly #_eventEmitter: EventEmitter;
@@ -133,6 +133,28 @@ export class KVsEventsManager {
             const removalReason: KVRemovalReason = options?.reason || 'manual';
             const payload: KVRemoveEvent = { item: record.toJSON(), flavor: record.flavor, type: 'remove', reason: removalReason };
             await this.#_emit('remove', payload);
+        },
+
+        /**
+         * Emits the 'bulkRemove' event for multiple records being removed from the key-value cache.
+         *
+         * This method creates and emits a payload for the 'bulkRemove' event, including the records' data and the reason for removal.
+         * 
+         * @param {KVCacheRecord[]} records - An array of key-value cache records that are being removed.
+         * @param {Object} [options] - The options for the removal event.
+         * @param {KVRemovalReason} [options.reason='manual'] - The reason for the removal. Defaults to 'manual'.
+         * @since v1.0.0
+         */
+        bulkRemove: async (records: KVCacheRecord[], options: { reason: KVRemovalReason } = { reason: 'manual' }) => {
+            const removalReason: KVRemovalReason = options?.reason || 'manual';
+            const payload: KVBulkRemoveEvent = {
+                items: records.map(record => record.toJSON()),
+                flavor: records[0].flavor,
+                type: 'bulkRemove',
+                reason: removalReason
+            }
+
+            await this.#_emit('bulkRemove', payload);
         },
 
         /**

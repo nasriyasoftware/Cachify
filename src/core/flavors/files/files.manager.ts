@@ -76,8 +76,20 @@ class FilesCacheManager {
                     if (record) {
                         await this.#_enginesProxy.remove(record);
                     }
-                    
+
                     scopeMap.delete(event.item.key);
+                }
+            }, { type: 'beforeAll' });
+
+            this.#_events.on('bulkRemove', async event => {
+                for (const item of event.items) {
+                    const scopeMap = this.#_helpers.records.getScopeMap(item.scope);
+                    const record = scopeMap.get(item.key);
+                    if (record) {
+                        await this.#_enginesProxy.remove(record);
+                    }
+
+                    scopeMap.delete(item.key);
                 }
             }, { type: 'beforeAll' });
 
@@ -851,7 +863,7 @@ class FilesCacheManager {
         try {
             this.#_helpers.startBlockingProcess('clearing');
 
-            const records = (() => {
+            const recordsMap = (() => {
                 if (scope !== undefined) {
                     if (!atomix.valueIs.string(scope)) { throw new TypeError(`The provided scope (${scope}) is not a string.`) }
                     if (!atomix.valueIs.notEmptyString(scope)) { throw new RangeError(`The provided scope (${scope}) cannot be empty.`) }
@@ -865,32 +877,37 @@ class FilesCacheManager {
                 }
             })();
 
-            const iterator = helpers.records.createIterator(records);
-            const queue = new AdaptiveTaskQueue({ autoRun: true });
+            const iterator = helpers.records.createIterator(recordsMap);
+            const records: FileCacheRecord[] = [];
+            const stats = Object.seal({ read: 0, update: 0, touch: 0, hit: 0, miss: 0 });
 
-            for (const { record } of iterator) {
-                queue.addTask({
-                    id: `${record.scope}:${record.key}`,
-                    type: 'remove',
-                    action: async () => {
-                        if (cachify.debug) {
-                            console.debug(`Removing ${record.scope}:${record.key}`);
-                        }
+            const remove = async () => {
+                if (records.length === 0) { return }
+                await this.#_events.emit.bulkRemove(records, { reason: 'manual' });
 
-                        this.#_stats.counts.read -= record.stats.counts.read;
-                        this.#_stats.counts.touch -= record.stats.counts.touch;
-                        this.#_stats.counts.update -= record.stats.counts.update;
-                        this.#_stats.counts.hit -= record.stats.counts.hit;
-                        this.#_stats.counts.miss -= record.stats.counts.miss;
+                this.#_stats.counts.read -= stats.read;
+                this.#_stats.counts.update -= stats.update;
+                this.#_stats.counts.touch -= stats.touch;
+                this.#_stats.counts.hit -= stats.hit;
+                this.#_stats.counts.miss -= stats.miss;
 
-                        await this.#_events.emit.remove(record as FileCacheRecord, { reason: 'manual' })
-                    },
-                    onReject: (error) => console.error(error),
-                })
+                records.length = stats.read = stats.update = stats.touch = stats.hit = stats.miss = 0;
             }
 
-            queue.run();
-            await queue.untilComplete();
+            for (const { record } of iterator) {
+                stats.read += record.stats.counts.read;
+                stats.update += record.stats.counts.update;
+                stats.touch += record.stats.counts.touch;
+                stats.hit += record.stats.counts.hit;
+                stats.miss += record.stats.counts.miss;
+
+                records.push(record as FileCacheRecord);
+                if (records.length === 1_000) {
+                    await remove();
+                }                
+            }
+
+            await remove();
             if (this.size === 0) {
                 (this.#_helpers.cacheManagement.eviction.scheduleEvictionCheck as any).cancel();
                 this.#_events.dispose();

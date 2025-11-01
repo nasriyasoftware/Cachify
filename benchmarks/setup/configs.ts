@@ -26,7 +26,7 @@ class BenchmarkGlobalConfigs {
             /** The number of KV items to use in the benchmark. */
             files: 1_000,
             /** The number of file items to use in the benchmark. */
-            kvs: 100_000
+            kvs: 10_000
         }),
 
     }

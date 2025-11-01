@@ -1,3 +1,4 @@
+import cachify from "../../../cachify";
 import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
@@ -8,7 +9,7 @@ import helpers from "../helpers";
 import constants from "../../consts/consts";
 import utils from "../../../utils/utils";
 
-import { CacheStatusChangeHandler, TTLKVOptions } from "../../configs/strategies/docs";
+import type { CacheStatusChangeHandler, TTLKVOptions } from "../../configs/strategies/docs";
 import { AdaptiveTaskQueue, BaseQueueTask } from "@nasriya/atomix/tools";
 
 import EnginesProxy from "../../engines/EnginesProxy";
@@ -16,7 +17,6 @@ import PersistenceProxy from "../../persistence/proxy";
 import type { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import type { BlockingFlags, BlockingProcess, CacheManagerAssets, CachePreloadInitiator } from "../../docs/docs";
 import type { KVSetOptions, KVSetConfigs, KVNormalSetConfigs, KVNormalSetOptions, KVPreloadWarmupSetOptions, KVPreloadWarmupSetConfigs, KVPreloadRestoreSetOptions, KVPreloadRestoreSetConfigs, KVPreloadSetConfigs } from "./docs";
-import cachify from "../../../cachify";
 
 const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
@@ -69,9 +69,12 @@ class KVsCacheManager {
         {
             this.#_events.on('remove', async event => {
                 const scopeMap = this.#_helpers.records.getScopeMap(event.item.scope);
-                const record = scopeMap.get(event.item.key)!;
-                this.#_memoryManager.handle.remove(record);
-                await this.#_enginesProxy.remove(record);
+                const record = scopeMap.get(event.item.key);
+                if (record) {
+                    this.#_memoryManager.handle.remove(record);
+                    await this.#_enginesProxy.remove(record);
+                }
+
                 scopeMap.delete(event.item.key);
             }, { type: 'beforeAll' });
 
@@ -166,12 +169,8 @@ class KVsCacheManager {
                 await this.#_memoryManager.helpers.applyDelta(delta);
             },
             remove: async (record: KVCacheRecord) => {
-                if (record) {
-                    if (!record.engines.includes('memory')) { return }
-                    await this.#_memoryManager.helpers.applyDelta(-record.stats.size);
-                } else {
-                    console.warn('[WARN] Attempted to remove a record that does not exist. Likely as a result of a race condition.');
-                }
+                if (!record.engines.includes('memory')) { return }
+                await this.#_memoryManager.helpers.applyDelta(-record.stats.size);
             },
             create: async (record: KVCacheRecord) => {
                 if (!record.engines.includes('memory')) { return }

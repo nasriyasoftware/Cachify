@@ -83,7 +83,6 @@ class Benchmark {
                         table[taskName] = taskStats;
                     }
 
-                    consoleX.newLine();
                     consoleX.table(table);
                     consoleX.newLine();
                 }
@@ -149,7 +148,6 @@ class Benchmark {
 
                 consoleX.log(`📊 ${colors.blue}Analysis Results`);
                 this.#_analytics.print();
-                consoleX.newLine();
             }
 
             consoleX.predefined.title('Cachify Benchmarks: End');

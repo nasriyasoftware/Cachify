@@ -1,3 +1,4 @@
+import cachify from "../../../cachify";
 import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
@@ -6,9 +7,9 @@ import FilesCacheConfig from "../../configs/managers/files/FilesCacheConfig";
 import FilesEventsManager from "../../events/managers/files/FilesEventsManager";
 import helpers from "../helpers";
 
-import { CacheStatusChangeHandler, TTLFileOptions } from "../../configs/strategies/docs";
-import { AdaptiveTaskQueue, BaseQueueTask, TasksQueue } from "@nasriya/atomix/tools";
-import { FileContentSizeChangeEvent } from "../../events/docs";
+import type { CacheStatusChangeHandler, TTLFileOptions } from "../../configs/strategies/docs";
+import type { FileContentSizeChangeEvent } from "../../events/docs";
+import { AdaptiveTaskQueue, BaseQueueTask } from "@nasriya/atomix/tools";
 
 import EnginesProxy from "../../engines/EnginesProxy";
 import PersistenceProxy from "../../persistence/proxy";
@@ -17,7 +18,6 @@ import constants from "../../consts/consts";
 import type { BlockingFlags, BlockingProcess, CacheFlavor, CacheManagerAssets, CachePreloadInitiator } from "../../docs/docs";
 import type { BackupParameters, RestoreParameters, StorageServices } from "../../persistence/docs";
 import type { FileKeyOptions, FileNormalSetConfigs, FileNormalSetOptions, FileOptions, FilePathOptions, FilePreloadRestoreSetConfigs, FilePreloadRestoreSetOptions, FilePreloadSetConfigs, FilePreloadSetOptions, FilePreloadWarmupSetConfigs, FilePreloadWarmupSetOptions, FileSetConfigs, FileSetOptions } from "./docs";
-import cachify from "../../../cachify";
 
 const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
@@ -75,8 +75,9 @@ class FilesCacheManager {
                     const record = scopeMap.get(event.item.key)!;
                     if (record) {
                         await this.#_enginesProxy.remove(record);
-                        scopeMap.delete(event.item.key);
                     }
+                    
+                    scopeMap.delete(event.item.key);
                 }
             }, { type: 'beforeAll' });
 

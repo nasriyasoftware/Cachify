@@ -157,7 +157,9 @@ class EnginesProxy {
      * @since v1.0.0
      */
     async remove(record: CacheRecord): Promise<void> {
+        // Defensive: If already gone, return immediately
         if (!record) { return }
+
         const queue = this.#_helpers.getTaskQueue(record.key as QueueKey);
         const taskId = `remove_${record.key as QueueKey}`;
 

@@ -24,6 +24,7 @@ export interface CacheEvents<T extends CacheRecord = CacheRecord> {
     remove: { payload: RemoveEvent<T>, type: 'remove' };
     bulkRemove: { payload: BulkRemoveEvent<T>, type: 'bulkRemove' };
     fileContentSizeChange: { payload: FileContentSizeChangeEvent, type: 'fileContentSizeChange' };
+    fileRenameChange: { payload: FileRenameEvent, type: 'fileRenameChange' };
 }
 
 export type RemovalReasons<T extends CacheRecord> =
@@ -120,6 +121,13 @@ export interface FileContentSizeChangeEvent extends BaseCacheEvent<FileCacheReco
     item: FileCacheRecordJSON;
     type: 'fileContentSizeChange';
     delta: number;
+}
+
+export interface FileRenameEvent extends BaseCacheEvent<FileCacheRecord> {
+    item: FileCacheRecordJSON;
+    type: 'fileRenameChange';
+    oldPath: string;
+    newPath: string;
 }
 
 export type EventsManagers = {

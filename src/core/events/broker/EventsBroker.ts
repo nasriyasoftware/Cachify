@@ -5,6 +5,7 @@ import type { KVCacheEvent, KVCacheEvents, KVCachePayload, KVRemovalReason } fro
 import type { EmitMap, OnAnyMap, OnMap, RemoveHandlerMap } from "./docs";
 import FileCacheRecord from "../../flavors/files/files.record";
 import KVCacheRecord from "../../flavors/kvs/kvs.record";
+import { RenameEvent } from "@nasriya/overwatch";
 
 /**
  * A centralized broker for managing cache-related events.
@@ -404,6 +405,14 @@ class EventsBroker {
              * @since v1.0.0
              */
             contentSizeChange: (record: FileCacheRecord, delta: number) => this.#_managers.files.emit.contentSizeChange(record, delta),
+
+            /**
+             * Emits the 'fileRenameChange' event when a file record is renamed.
+             * @param {FileCacheRecord} record - The file cache record that was renamed.
+             * @param {RenameEvent} renameEvent - The rename event containing the old and new paths.
+             * @since v1.0.0
+             */
+            fileRenameChange: (record: FileCacheRecord, renameEvent: RenameEvent) => this.#_managers.files.emit.fileRenameChange(record, renameEvent),
         },
 
         /**

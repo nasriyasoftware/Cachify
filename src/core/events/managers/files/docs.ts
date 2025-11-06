@@ -2,7 +2,7 @@ import FileCacheRecord from "../../../flavors/files/files.record";
 import { Prettify } from "@nasriya/atomix";
 import { CacheEvent, CacheEvents, CreateEvent, DirectRemovalSource, EvictReason, ReadEvent, RemovalReason, RemoveEvent, UpdateEvent, TouchEvent, HitEvent, MissEvent, FilesInvalidateReason, BulkRemoveEvent } from "../../docs";
 
-export type FileCacheEvent = Extract<CacheEvent<FileCacheRecord>, 'create' | 'read' | 'update' | 'clear' | 'evict' | 'expire' | 'hit' | 'miss' | 'touch' | 'invalidate' | 'remove' | 'bulkRemove' | 'fileContentSizeChange'>;
+export type FileCacheEvent = Extract<CacheEvent<FileCacheRecord>, 'create' | 'read' | 'update' | 'clear' | 'evict' | 'expire' | 'hit' | 'miss' | 'touch' | 'invalidate' | 'remove' | 'bulkRemove' | 'fileContentSizeChange' | 'fileRenameChange'>;
 export type FileCacheEvents = Pick<CacheEvents<FileCacheRecord>, FileCacheEvent>;
 export type FileCachePayload = FileCacheEvents[FileCacheEvent]['payload'];
 export type FileRemovalReason = Extract<RemovalReason, EvictReason | DirectRemovalSource | FilesInvalidateReason | 'expire'>;

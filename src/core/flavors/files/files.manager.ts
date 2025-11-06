@@ -1,4 +1,3 @@
-import cachify from "../../../cachify";
 import atomix from "@nasriya/atomix";
 import cron, { ScheduledTask } from "@nasriya/cron";
 
@@ -9,7 +8,7 @@ import helpers from "../helpers";
 
 import type { CacheStatusChangeHandler, TTLFileOptions } from "../../configs/strategies/docs";
 import type { FileContentSizeChangeEvent } from "../../events/docs";
-import { AdaptiveTaskQueue, BaseQueueTask } from "@nasriya/atomix/tools";
+import type { BaseQueueTask } from "@nasriya/atomix/tools";
 
 import EnginesProxy from "../../engines/EnginesProxy";
 import PersistenceProxy from "../../persistence/proxy";
@@ -115,6 +114,20 @@ class FilesCacheManager {
 
             this.#_events.on('fileContentSizeChange', event => {
                 this.#_memoryManager.handle(event);
+            }, { type: 'beforeAll' });
+
+            this.#_events.on('fileRenameChange', event => {
+                const scopeMap = this.#_helpers.records.getScopeMap(event.item.scope);
+                const record = scopeMap.get(event.item.key);
+                const newKey = this.#_helpers.generateKey(event.newPath);
+
+                if (record) {
+                    scopeMap.set(newKey, record);
+                    scopeMap.delete(event.item.key);
+                }
+
+                console.assert(scopeMap.get(event.item.key) === undefined, 'The record should be removed from the scope map');
+                console.assert(scopeMap.get(newKey) === record, 'The record should be added to the scope map');
             }, { type: 'beforeAll' });
         }
     }
@@ -261,7 +274,7 @@ class FilesCacheManager {
                     const filePath = (options as FilePathOptions).filePath;
                     if (!atomix.valueIs.string(filePath)) { throw new TypeError(`The "filePath" property of the "options" object (when provided) must be a string, but instead got ${typeof filePath}`) }
                     if (filePath.length === 0) { throw new RangeError(`The "filePath" property of the "options" object (when provided) must be a non-empty string`) }
-                    configs.key = atomix.http.btoa(filePath);
+                    configs.key = this.#_helpers.generateKey(filePath);
                     pathConfigs.filePath = filePath;
 
                     if (hasCaseSensitive) {
@@ -618,6 +631,10 @@ class FilesCacheManager {
                     return preload ? validate.miniHelpers.preloadOptions.any(options as unknown as FilePreloadSetConfigs, normalConfigs) : normalConfigs;
                 }
             }
+        },
+        generateKey: (filePath: string): string => {
+            const normalized = atomix.path.normalizePath(filePath);
+            return atomix.http.btoa(normalized);
         }
     }
 
@@ -691,7 +708,7 @@ class FilesCacheManager {
      * @since v1.0.0
      */
     async set(filePath: string, options?: FileSetOptions) {
-        const key = atomix.http.btoa(filePath);
+        const key = this.#_helpers.generateKey(filePath);
         this.#_helpers.checkIfClearing('set', key);
 
         try {
@@ -904,7 +921,7 @@ class FilesCacheManager {
                 records.push(record as FileCacheRecord);
                 if (records.length === 1_000) {
                     await remove();
-                }                
+                }
             }
 
             await remove();

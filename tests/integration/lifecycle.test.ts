@@ -165,6 +165,34 @@ describe('Cachify Lifecycle Integration', () => {
             const read = await client.files.read({ filePath: testFile });
             expect(read).toBeUndefined();
         });
+
+        it('updates keys upon file rename while keeping metadata', async () => {
+            const originalInterval = overwatch.detectionInterval;
+            overwatch.detectionInterval = 200;
+
+            try {
+                const originalPath = path.join(configs.testDir, 'original_file.txt');
+                const renamedPath = path.join(configs.testDir, 'renamed_file.txt');
+
+                await fs.promises.writeFile(originalPath, 'initial content');
+                await cachify.files.set(originalPath, { preload: true, initiator: 'warmup' });
+
+                await fs.promises.rename(originalPath, renamedPath);
+                await atomix.utils.sleep(250);
+
+                const originalInspect = cachify.files.inspect({ filePath: originalPath });
+                expect(originalInspect).toBeUndefined();
+
+                const inspect = cachify.files.inspect({ filePath: renamedPath });
+                expect(inspect).toBeDefined();
+
+                const read = await cachify.files.read({ filePath: renamedPath });
+                expect(read!.status).toBe('hit');
+                expect(read!.content.toString()).toBe('initial content');
+            } finally {
+                overwatch.detectionInterval = originalInterval;
+            }
+        });
     });
 
     //

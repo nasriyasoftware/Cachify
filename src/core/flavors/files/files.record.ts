@@ -1,9 +1,9 @@
 import atomix from "@nasriya/atomix";
-import cachify from "../../../cachify";
-import overwatch from "@nasriya/overwatch";
+import overwatch, { RenameEvent } from "@nasriya/overwatch";
 import Watcher from "@nasriya/overwatch/dist/@types/watcher/Watcher";
 import cron, { ScheduledTimedTask } from "@nasriya/cron";
 
+import FilesCacheManager from "./files.manager";
 import TTLItemConfig from "../../configs/strategies/ttl/TTLItemConfig";
 import EnginesProxy from "../../engines/EnginesProxy";
 import FilesEventsManager from "../../events/managers/files/FilesEventsManager";
@@ -12,7 +12,6 @@ import filesystem from "./filesystem";
 import path from 'path';
 import type { FileCacheReadResponse, FileSetConfigs, FileStats } from "./docs";
 import type { CachePreloadInitiator } from "../../docs/docs";
-import FilesCacheManager from "./files.manager";
 
 class FileCacheRecord {
     #_manager: FilesCacheManager;
@@ -59,7 +58,7 @@ class FileCacheRecord {
         watcher: {
             task: null as unknown as Watcher,
             systemHandlers: Object.freeze({
-                onUpdate: async (event: unknown) => {
+                onUpdate: async () => {
                     if (this.isContentCached) {
                         await this.refresh();
                     }
@@ -67,8 +66,27 @@ class FileCacheRecord {
                 onRemove: async () => {
                     await this.#_events.emit.remove(this, { reason: 'file.delete' });
                 },
-                onRename: async () => {
-                    await this.#_events.emit.remove(this, { reason: 'file.rename' });
+                onRename: async (event: RenameEvent) => {
+                    if (this.isContentCached) {
+                        await this.#_proxy.remove(this);
+                    }
+
+                    // Emit the event before changing anything
+                    await this.#_events.emit.fileRenameChange(this, event);
+
+                    const oldKey = this.#_key;
+
+                    // Update the record
+                    this.#_key = this.#_helpers.generateKey(event.newPath);
+                    this.#_data.file.path = event.newPath;
+                    this.#_data.file.name = path.basename(event.newPath);
+
+                    // Refresh the content if it's cached
+                    if (this.isContentCached) {
+                        await this.refresh();
+                    }
+
+                    console.assert(this.#_key !== oldKey, 'Key should not be the same after renaming the file');
                 }
             })
         }
@@ -111,7 +129,7 @@ class FileCacheRecord {
         } else {
             this.#_data.file.path = filePath;
             this.#_data.file.name = path.basename(filePath);
-            this.#_key = atomix.http.btoa(filePath);
+            this.#_key = this.#_helpers.generateKey(filePath);
             this.#_data.stats.dates.created = Date.now();
         }
 
@@ -217,6 +235,10 @@ class FileCacheRecord {
         registerAccess: () => {
             this.#_data.stats.dates.lastAccess = Date.now();
             this.#_helpers.refreshTTL();
+        },
+        generateKey: (filePath: string): string => {
+            const normalized = atomix.path.normalizePath(filePath);
+            return atomix.http.btoa(normalized);
         }
     })
 

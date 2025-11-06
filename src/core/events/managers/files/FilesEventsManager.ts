@@ -2,8 +2,9 @@ import atomix from '@nasriya/atomix';
 import cachify from '../../../../cachify';
 import FileCacheRecord from '../../../flavors/files/files.record';
 import { AddHandlerOptions, EventEmitter } from '@nasriya/atomix/tools';
-import { EvictReason, FileContentSizeChangeEvent } from '../../docs';
+import { EvictReason, FileContentSizeChangeEvent, FileRenameEvent } from '../../docs';
 import { FileBulkRemoveEvent, FileCacheEvent, FileCacheEvents, FileCachePayload, FileCreateEvent, FileHitEvent, FileMissEvent, FileReadEvent, FileRemovalReason, FileRemoveEvent, FileTouchEvent, FileUpdateEvent } from './docs';
+import { RenameEvent } from '@nasriya/overwatch';
 
 export class FilesEventsManager {
     readonly #_eventEmitter: EventEmitter;
@@ -255,6 +256,17 @@ export class FilesEventsManager {
         contentSizeChange: async (record: FileCacheRecord, delta: number) => {
             const payload: FileContentSizeChangeEvent = { item: record.toJSON(), flavor: record.flavor, type: 'fileContentSizeChange', delta: Number(delta) };
             await this.#_emit('fileContentSizeChange', payload);
+        },
+
+        /**
+         * Emits the 'fileRenameChange' event when a file record is renamed.
+         * @param {FileCacheRecord} record - The file cache record that was renamed.
+         * @param {RenameEvent} renameEvent - The rename event containing the old and new paths.
+         * @since v1.0.0
+         */
+        fileRenameChange: async (record: FileCacheRecord, renameEvent: RenameEvent) => {
+            const payload: FileRenameEvent = { item: record.toJSON(), flavor: record.flavor, type: 'fileRenameChange', oldPath: renameEvent.oldPath, newPath: renameEvent.newPath };
+            await this.#_emit('fileRenameChange', payload);
         }
     }
 

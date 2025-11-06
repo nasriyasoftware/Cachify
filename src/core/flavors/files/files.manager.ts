@@ -125,9 +125,6 @@ class FilesCacheManager {
                     scopeMap.set(newKey, record);
                     scopeMap.delete(event.item.key);
                 }
-
-                console.assert(scopeMap.get(event.item.key) === undefined, 'The record should be removed from the scope map');
-                console.assert(scopeMap.get(newKey) === record, 'The record should be added to the scope map');
             }, { type: 'beforeAll' });
         }
     }

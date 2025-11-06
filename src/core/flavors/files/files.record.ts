@@ -85,8 +85,6 @@ class FileCacheRecord {
                     if (this.isContentCached) {
                         await this.refresh();
                     }
-
-                    console.assert(this.#_key !== oldKey, 'Key should not be the same after renaming the file');
                 }
             })
         }

@@ -145,7 +145,6 @@ class FileCacheRecord {
 
             this.#_data.stats.counts.update++;
             this.#_data.stats.dates.lastUpdate = Date.now();
-            this.#_data.file.eTag = atomix.http.btoa(`${this.#_data.file.stats.size}-${this.#_data.file.stats.mtime}`);
             this.#_helpers.refreshTTL();
 
             // Storing content
@@ -194,6 +193,7 @@ class FileCacheRecord {
                 mtime: mtime.getTime(),
             };
 
+            this.#_data.file.eTag = atomix.http.btoa(`${size}-${mtime.getTime()}`);
             await this.#_helpers.checkSizeQuota();
         },
         refreshTTL: () => {

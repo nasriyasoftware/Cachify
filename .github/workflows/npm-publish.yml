@@ -1,0 +1,53 @@
+name: Publish Package to npmjs
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+
+     # Add Redis as a service
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
+    env:
+      REDIS_TEST_URL: redis://localhost:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # Setup .npmrc file to publish to npm
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.x'
+          registry-url: 'https://registry.npmjs.org'
+          
+      - name: Install dependencies
+        run: npm ci
+
+      # - name: Debug - List project directory
+      #   run: ls -R
+
+      # - name: Debug - List node_modules directory
+      #   run: ls -R node_modules
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        
+      - name: Publish package to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

@@ -1,0 +1,92 @@
+{
+  "name": "@nasriya/cachify",
+  "version": "0.1.0-beta",
+  "description": "A lightweight, extensible in-memory caching library for storing anything, with built-in TTL and customizable cache types.",
+  "keywords": [
+    "cache",
+    "caching",
+    "nodejs",
+    "memory-cache",
+    "file-cache",
+    "redis",
+    "key-value",
+    "persistent-cache",
+    "multi-storage",
+    "cache-engine",
+    "cold-start",
+    "fast-cache",
+    "extensible",
+    "lifecycle-management"
+  ],
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/@types/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/@types/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && postbuild",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "test": "jest --detectOpenHandles",
+    "upgrade": "ncu -u --dep dev,peer",
+    "benchmark": "bun run benchmarks"
+  },
+  "maintainers": [
+    {
+      "name": "Ahmad Nasriya",
+      "email": "ahmad@nasriya.net",
+      "url": "https://www.linkedin.com/in/ahmadnasriya/"
+    }
+  ],
+  "repository": {
+    "type": "github",
+    "url": "git+https://github.com/nasriyasoftware/Cachify.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nasriyasoftware/Cachify/issues"
+  },
+  "homepage": "https://package.nasriya.net/Cachify",
+  "funding": {
+    "type": "individual",
+    "url": "https://fund.nasriya.net/"
+  },
+  "license": "NPCL-1",
+  "author": "Nasriya Software",
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.937.0",
+    "@nasriya/postbuild": "^1.1.5",
+    "@redis/client": "^5.10.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.1",
+    "bun": "^1.3.3",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5"
+  },
+  "dependencies": {
+    "@nasriya/atomix": "^1.0.23",
+    "@nasriya/cron": "^1.1.2",
+    "@nasriya/overwatch": "^1.1.4",
+    "@nasriya/uuidx": "^1.0.3"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.917.0",
+    "@redis/client": "^5.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@redis/client": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
+  }
+}

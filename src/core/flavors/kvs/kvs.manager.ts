@@ -511,7 +511,7 @@ class KVsCacheManager {
             return scopeMap.get(key);
         },
         update: async (record: KVCacheRecord, value: unknown, session?: CacheSession): Promise<void> => {
-            if (record.locked) {
+            if (record.isLocked) {
                 if (!session || !session.lockedRecords.has(record)) {
                     await record.untilReleased();
                 }
@@ -563,7 +563,7 @@ class KVsCacheManager {
                 return record.untilReleased();
             }
 
-            if (record.locked) {
+            if (record.isLocked) {
                 await handleLocked(record, session);
             }
 
@@ -576,7 +576,7 @@ class KVsCacheManager {
             const record = scopeMap.get(key);
             if (!record) { return false }
 
-            if (record.locked) {
+            if (record.isLocked) {
                 if (!session || !session.lockedRecords.has(record)) {
                     await record.untilReleased();
                 }

@@ -13,7 +13,7 @@ class CacheSession {
     readonly #_flags = Object.seal({ released: false, locking: false });
     readonly #_storage = {
         locked: new Set<KVCacheRecord>(),
-        pending: new Set<KVCacheRecord>()
+        pending: new Set<KVCacheRecord>(),
     }
 
     #_timeout: NodeJS.Timeout | undefined;
@@ -34,7 +34,7 @@ class CacheSession {
         },
         releaseRecords: () => {
             for (const record of this.#_storage.locked.values()) {
-                if (!record.locked) { continue }
+                if (!record.isLocked) { continue }
 
                 record.release(this.#_id);
 
@@ -116,7 +116,9 @@ class CacheSession {
         this.#_controller = configs.controller;
         this.#_cacheController = configs.cacheController;
         this.#_policy = Object.freeze(configs.policy);
-        this.#_helpers.setTimeout(configs.timeout);
+        if (configs.timeout > 0) {
+            this.#_helpers.setTimeout(configs.timeout);
+        }        
     }
 
     /**
@@ -177,7 +179,7 @@ class CacheSession {
 
                 const record = this.#_cacheController.get(key, scope);
                 if (!record) {
-                    throw new SessionError('SESSION_RECORD_NOT_FOUND', {
+                    throw new SessionError('SESSION_RECORD_NOT_FOUND_IN_CACHE', {
                         message: `Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`,
                         cause: 'Attempting to read a record that does not exist in the cache'
                     });
@@ -217,7 +219,7 @@ class CacheSession {
 
                 const record = this.#_cacheController.get(key, scope);
                 if (!record) {
-                    throw new SessionError('SESSION_RECORD_NOT_FOUND', {
+                    throw new SessionError('SESSION_RECORD_NOT_FOUND_IN_CACHE', {
                         message: `Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`,
                         cause: 'Attempting to update a record that does not exist in the cache'
                     });

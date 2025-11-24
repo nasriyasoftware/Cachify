@@ -6,6 +6,7 @@ import EnginesProxy from "../../engines/EnginesProxy";
 import TTLItemConfig from "../../configs/strategies/ttl/TTLItemConfig";
 import helpers from "../helpers";
 import CacheSession from "../../sessions/CacheSession";
+import SessionError from "../../sessions/errors/SessionError";
 import type { SessionId } from "../../sessions/docs";
 import type { KVSetConfigs } from "./docs";
 
@@ -148,6 +149,13 @@ class KVCacheRecord {
      */
     async lock(session: CacheSession): Promise<void> {
         if (this.#_session) {
+            if (this.#_session.policy.exclusive) {
+                throw new SessionError('SESSION_RECORD_IS_EXCLUSIVE', {
+                    message: `The record of key "${this.#_key}" and scope "${this.#_scope}" is exclusive and cannot be locked by another session.`,
+                    cause: 'Attempting to lock an exclusive record'
+                });
+            }
+
             await this.#_session.untilReleased();
         }
 
@@ -182,7 +190,17 @@ class KVCacheRecord {
      * and should not be modified until the session is released.
      * @returns {boolean} Whether or not this cache record is currently locked.
      */
-    get locked(): boolean { return this.#_session !== undefined }
+    get isLocked(): boolean { return this.#_session !== undefined }
+
+    /**
+     * Retrieves whether or not this cache record is currently locked and exclusive.
+     * A locked and exclusive cache record indicates that the associated records are currently being accessed
+     * and should not be modified until the session is released, and that no other session can lock the record.
+     * @returns {boolean} Whether or not this cache record is currently locked and exclusive.
+     */
+    get isExclusive(): boolean {
+        return this.isLocked && this.#_session!.policy.exclusive;
+    }
 
     /**
      * Retrieves the flavor of the cache record.

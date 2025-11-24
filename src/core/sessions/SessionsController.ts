@@ -4,6 +4,7 @@ import atomix from "@nasriya/atomix";
 import KVCacheRecord from "../flavors/kvs/kvs.record";
 import type { KVCacheController } from "../flavors/kvs/docs";
 import type { SessionConfigs, SessionId, SessionOptions, SessionPolicy, SessionRecordMeta } from "./docs";
+import SessionError from "./errors/SessionError";
 
 const hasOwnProp = atomix.dataTypes.record.hasOwnProperty;
 
@@ -18,7 +19,8 @@ class SessionsController {
 
     readonly #_configs = {
         policy: {
-            blockRead: false
+            blockRead: false,
+            exclusive: false
         } as SessionPolicy,
     }
 
@@ -113,8 +115,7 @@ class SessionsController {
                 if (hasOwnProp(options, 'timeout')) {
                     if (!atomix.valueIs.number(options.timeout)) { throw new TypeError(`The "timeout" property of the "options" object (when provided) must be a number, but instead got ${typeof options.timeout}`) }
                     if (!atomix.valueIs.integer(options.timeout)) { throw new TypeError(`The "timeout" property of the "options" object must be an integer, but instead got ${options.timeout}`) }
-                    if (!atomix.valueIs.positiveNumber(options.timeout)) { throw new RangeError(`The "timeout" property of the "options" object must be a positive number, but instead got ${options.timeout}`) }
-                    if (options.timeout === 0) { throw new RangeError(`The "timeout" property of the "options" object cannot be 0`) }
+                    if (options.timeout < 0) { throw new RangeError(`The "timeout" property of the "options" object must either be 0 or a positive number, but instead got ${options.timeout}`) }
                     configs.timeout = options.timeout;
                 }
 
@@ -125,6 +126,12 @@ class SessionsController {
                     if (hasOwnProp(policy, 'blockRead')) {
                         if (typeof policy.blockRead !== 'boolean') { throw new TypeError(`The "blockRead" property of the "policy" object (when provided) must be a boolean, but instead got ${typeof policy.blockRead}`) }
                         configs.policy.blockRead = policy.blockRead;
+                    }
+
+                    if (hasOwnProp(policy, 'exclusive')) {
+                        if (typeof policy.exclusive !== 'boolean') { throw new TypeError(`The "exclusive" property of the "policy" object (when provided) must be a boolean, but instead got ${typeof policy.exclusive}`) }
+                        configs.policy.exclusive = policy.exclusive;
+                        if (policy.exclusive) { configs.timeout = 0; }
                     }
                 }
             }
@@ -170,7 +177,10 @@ class SessionsController {
 
             if (this.#_pending.has(record)) {
                 const session = this.#_pending.get(record)!;
-                await session.untilReleased().catch(() => {});
+                await session.untilReleased().catch((err) => {
+                    if (err instanceof SessionError && err.code === 'SESSION_TIMEOUT') { return; }
+                    throw err;
+                });
             }
 
             records.add(record);

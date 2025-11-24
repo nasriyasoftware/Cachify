@@ -25,6 +25,14 @@ export interface SessionPolicyOptions {
      * @default false
      */
     blockRead?: boolean;
+
+    /**
+     * Whether the acquired records become exclusive to the session.
+     * When exclusive, other sessions cannot acquire the same records and will
+     * throw a `SessionError` with `SESSION_RECORD_IS_EXCLUSIVE` code.
+     * @default false (no exclusivity)
+     */
+    exclusive?: boolean;
 }
 
 export type SessionPolicy = Prettify<Readonly<Required<SessionPolicyOptions>>>;

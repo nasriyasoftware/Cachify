@@ -78,8 +78,8 @@
     "@nasriya/uuidx": "^1.0.3"
   },
   "peerDependencies": {
-    "@aws-sdk/client-s3": "^3.917.0",
-    "@redis/client": "^5.9.0"
+    "@aws-sdk/client-s3": "^3.937.0",
+    "@redis/client": "^5.10.0"
   },
   "peerDependenciesMeta": {
     "@redis/client": {

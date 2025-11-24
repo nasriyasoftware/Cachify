@@ -269,69 +269,82 @@ console.log(fileResponse); // { status: 'hit' | 'miss', content: Buffer }
 - Cloud adapters (e.g., S3) can be registered similarly to local adapters for persistent storage.
 
 ### 6. Lock Sessions & Safe Concurrency
-Cachify supports **lock sessions** to safely acquire and modify records in concurrent environments. A session ensures that only the session which acquired a record can **update** or **remove** it. By default, **read operations are blocked** for records acquired by another session, but they can bypass this behavior if the session is created with the `blockRead: false` policy. Reads by the owning session are always allowed and non-blocking.
+Cachify supports **lock sessions**, which allow you to safely acquire and modify cache records in concurrent environments.  
+
+A **session** ensures that only the session which acquires a record can **update** or **remove** it. By default, **reads are blocked** for records acquired by another session, but you can override this behavior with the `blockRead: false` policy.  
+
+Sessions also support configurable **timeouts** to prevent records from being locked indefinitely, and the **exclusive** policy prevents other sessions from acquiring certain records at all.  
+
+Below are short examples illustrating default and custom session behaviors.
 
 
 ```ts
-import cachify from 'cachify';
+import cachify from '@nasriya/cachify';
 
-const alice = { key: "alice", scope: "users", status: "online" };
-const bob = { key: "bob", scope: "users", status: "offline" };
+const alice = { key: "alice", scope: "users" };
 
-// Seed cache
-await cachify.kvs.set(alice.key, alice, { scope: "users" });
-await cachify.kvs.set(bob.key, bob, { scope: "users" });
-
-// Create sessions
+// ------------------------
+// 1. Default timeout (10s)
+// ------------------------
 const session1 = cachify.kvs.createLockSession();
-const session2 = cachify.kvs.createLockSession({ timeout: 2000 });
+await session1.acquire([alice]);
+// session1 will auto-release after 10 seconds if not released manually
+session1.release();
 
-async function updateAliceStatus() {
-    // Acquire Alice record
-    await session1.acquire([alice]);
+// ------------------------
+// 2. Infinite timeout
+// ------------------------
+const session2 = cachify.kvs.createLockSession({ timeout: 0 });
+await session2.acquire([alice]);
+// session2 will not expire automatically
+session2.release();
 
-    // Modify Alice safely
-    alice.status = "away";
-    await session1.records.update(alice.key, alice, "users");
+// ------------------------
+// 3. Custom timeout (5s)
+// ------------------------
+const session3 = cachify.kvs.createLockSession({ timeout: 5000 });
+await session3.acquire([alice]);
+// session3 will auto-release after 5 seconds if not released manually
+session3.release();
 
-    // Release the session, allowing others to acquire
-    session1.release();
-}
+// ------------------------
+// 4. blockRead: false
+// ------------------------
+const session4 = cachify.kvs.createLockSession({ policy: { blockRead: false } });
+await session4.acquire([alice]);
+// Other sessions can read 'alice' even while session4 owns it
+session4.release();
 
-async function waitAndUpdateAlice() {
-    // Session2 will wait to acquire Alice until session1 releases
-    await session2.acquire([alice]);
-
-    const aliceRecord = await session2.records.read<typeof alice>(alice.key, "users");
-    console.log(aliceRecord?.status); // "away"
-
-    aliceRecord!.status = "busy";
-    await session2.records.update(alice.key, aliceRecord!, "users");
-    session2.release();
-}
-
-await Promise.all([updateAliceStatus(), waitAndUpdateAlice()]);
-
-// Read directly from cache
-const finalAlice = await cachify.kvs.read<typeof alice>(alice.key, "users");
-console.log(finalAlice?.status); // "busy"
+// ------------------------
+// 5. Exclusive session
+// ------------------------
+const session5 = cachify.kvs.createLockSession({ policy: { exclusive: true } });
+await session5.acquire([alice]);
+// Any other session trying to acquire 'alice' will throw immediately
+session5.release();
 ```
 
+> [!NOTE]
+> For more detailed examples and usage patterns, check out the [Cachify Wiki](https://github.com/nasriyasoftware/Cachify/wiki).
+
 **Notes:**
-
-- `acquire(records)` ensures **exclusive access** for writes; only the session that acquires a record can perform `update` or `remove` operations.
-- By default, **read operations are blocked** for records acquired by another session. Reads can only bypass this behavior if the session is created with `policy.blockRead: false`.
-- Multiple sessions attempting to acquire the same record are queued and served in the order they attempt to acquire it.
-- Sessions automatically enforce timeouts to prevent records from being locked indefinitely. When the timeout elapses, the session is rejected. If no timeout is configured, a default of 10 seconds is applied.
-
+- `acquire(records)` ensures **exclusive write access**; only the session that acquires a record can `update` or `remove` it.
+- By default, **reads from other sessions are blocked** until the record is released. Use `policy.blockRead: false` to bypass this behavior.
+- The **exclusive** policy prevents other sessions from acquiring a record. Attempting to acquire an exclusive record throws an error.
+- Sessions have **timeouts** to prevent indefinite locking:
+  - Default: 10 seconds
+  - Custom: any positive number of milliseconds
+  - Infinite: set `timeout: 0`
+- Multiple sessions attempting to acquire the same record are **queued and served in order**.
 - **Release** a session to free its records for other sessions.
-- Example scenario:
-  - Record `A` is acquired by `S1`.
-    - `S1` can `read`, `update`, and `remove` `A` without blocking.
-    - Another session `S2` attempting to `read` `A` will **wait until `S1` releases it** (unless `blockRead: false`).
-    - `S2` attempting to `update` or `remove` `A` will **throw an error**.
-    - Performing `update` or `remove` via the cache manager is **blocked** until `S1` releases the record.
 
+#### Example Use Cases
+
+- **Basic concurrency:** session `S1` acquires record `A`; session `S2` waits to read or acquire until `S1` releases.
+- **Blocked reads:** session `S1` acquires a record; other sessions attempting to read will block unless `blockRead: false`.
+- **Exclusive records:** records marked as `exclusive` cannot be acquired by other sessions; attempting to do so throws an error.
+- **Timeouts:** session automatically releases records when its timeout expires; can be default (10s), custom, or infinite (`timeout: 0`).
+- **Safe writes:** only the session that acquired a record can `update` or `remove` it; other sessions attempting these operations will throw an error.
 
 ___
 ## Testing

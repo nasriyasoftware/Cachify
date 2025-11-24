@@ -2,7 +2,6 @@ import uuidX from "@nasriya/uuidx";
 import CacheSession from "./CacheSession";
 import atomix from "@nasriya/atomix";
 import KVCacheRecord from "../flavors/kvs/kvs.record";
-import SessionTimeoutError from "./SessionTimeoutError";
 import type { KVCacheController } from "../flavors/kvs/docs";
 import type { SessionConfigs, SessionId, SessionOptions, SessionPolicy, SessionRecordMeta } from "./docs";
 

@@ -1,7 +1,7 @@
 import KVCacheRecord from "./kvs.record";
+import CacheSession from "../../sessions/CacheSession";
 import type { TTLKVOptions } from "../../configs/strategies/docs";
 import type { Prettify, RequiredStrict } from "@nasriya/atomix";
-import CacheSession from "../../sessions/CacheSession";
 
 type KVTypeMap = {
     options: {

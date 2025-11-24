@@ -1,7 +1,7 @@
 import cachify from "../../cachify";
 import SessionsController from "./SessionsController";
 import KVCacheRecord from "../flavors/kvs/kvs.record";
-import SessionTimeoutError from "./SessionTimeoutError";
+import SessionError from "./errors/SessionError";
 import type { SessionConfigs, SessionId, SessionPolicy, SessionRecordMeta } from "./docs";
 import type { KVCacheController } from "../flavors/kvs/docs";
 
@@ -51,7 +51,7 @@ class CacheSession {
                 this.#_controller.sessions.delete(this.#_id);
 
                 if (timedout) {
-                    const timeoutError = new SessionTimeoutError(this.#_id);
+                    const timeoutError = new SessionError('SESSION_TIMEOUT', { message: `Session ${this.#_id} timed out.` });
                     this.#_sessionPromise.internal.reject(timeoutError);
                 } else {
                     this.#_sessionPromise.internal.resolve();
@@ -108,7 +108,7 @@ class CacheSession {
 
     constructor(configs: SessionConfigs) {
         this.#_sessionPromise.external = this.#_sessionPromise.internal.promise.catch(err => {
-            if (err instanceof SessionTimeoutError) { return; }
+            if (err instanceof SessionError && err.code === 'SESSION_TIMEOUT') { return; }
             throw err;
         });
 
@@ -126,12 +126,12 @@ class CacheSession {
      * If any of the records cannot be acquired, or if the session has been released, the method throws an error.
      * @param recordsMeta - The metadata of the records to acquire, which can be a single meta record or an array of meta records.
      * @returns A promise that resolves when all records have been acquired and locked.
-     * @throws {Error} Thrown if the session has been released, or if any of the records cannot be acquired.
+     * @throws {SessionError} Thrown if the session has been released, or if any of the records cannot be acquired.
      */
     async acquire(recordsMeta: SessionRecordMeta | SessionRecordMeta[]): Promise<void> {
         try {
             if (this.#_flags.released) {
-                throw new Error(`The session has been released`);
+                throw new SessionError('SESSIION_ALREADY_RELEASED', { message: `The session has already been released.` });
             }
 
             const records = await this.#_controller.acquire(recordsMeta, this);
@@ -165,19 +165,22 @@ class CacheSession {
          * @param key - The key of the record to retrieve the value for.
          * @param scope - The scope of the record to retrieve the value for. Defaults to 'global'.
          * @returns A promise that resolves with the value associated with the cache record.
-         * @throws {Error} Thrown if the record does not exist in the cache, or if the session has not acquired the record.
+         * @throws {SessionError} Thrown if the record does not exist in the cache, or if the session has not acquired the record.
          * The error contains a summary of which engines failed and why.
          * @since v1.0.0
          */
         read: <T>(key: string, scope: string = 'global'): Promise<T | undefined> => {
             try {
                 if (this.#_flags.released) {
-                    throw new Error(`The session has been released`);
+                    new SessionError('SESSIION_ALREADY_RELEASED', { message: `The session has already been released.` });
                 }
 
                 const record = this.#_cacheController.get(key, scope);
                 if (!record) {
-                    throw new Error(`Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`);
+                    throw new SessionError('SESSION_RECORD_NOT_FOUND', {
+                        message: `Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`,
+                        cause: 'Attempting to read a record that does not exist in the cache'
+                    });
                 }
 
                 if (this.#_storage.locked.has(record)) {
@@ -202,23 +205,29 @@ class CacheSession {
          * @param value - The new value for the record.
          * @param scope - The scope of the record to update. Defaults to 'global'.
          * @returns A promise that resolves when the record has been updated.
-         * @throws {Error} Thrown if the record does not exist in the cache, or if the session has not acquired the record.
+         * @throws {SessionError} Thrown if the record does not exist in the cache, or if the session has not acquired the record.
          * The error contains a summary of which engines failed and why.
          * @since v1.0.0
          */
         update: <T>(key: string, value: T, scope: string = 'global'): Promise<void> => {
             try {
                 if (this.#_flags.released) {
-                    throw new Error(`The session has been released`);
+                    throw new SessionError('SESSIION_ALREADY_RELEASED', { message: `The session has already been released.` });
                 }
 
                 const record = this.#_cacheController.get(key, scope);
                 if (!record) {
-                    throw new Error(`Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`);
+                    throw new SessionError('SESSION_RECORD_NOT_FOUND', {
+                        message: `Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`,
+                        cause: 'Attempting to update a record that does not exist in the cache'
+                    });
                 }
 
                 if (!this.#_storage.locked.has(record)) {
-                    throw new Error(`Record with key "${key}" and scope "${scope}" has not been acquired by this session.`);
+                    throw new SessionError('SESSION_RECORD_NOT_ACQUIRED', {
+                        message: `Record with key "${key}" and scope "${scope}" has not been acquired by this session.`,
+                        cause: 'Attempting to update a record that has not been acquired by this session'
+                    });
                 }
 
                 return this.#_cacheController.update(record, value, this);
@@ -234,16 +243,19 @@ class CacheSession {
         remove: async (key: string, scope: string = 'global'): Promise<boolean> => {
             try {
                 if (this.#_flags.released) {
-                    throw new Error(`The session has been released`);
+                    throw new SessionError('SESSIION_ALREADY_RELEASED', { message: `The session has already been released.` });
                 }
 
                 const record = this.#_cacheController.get(key, scope);
                 if (!record) {
-                    throw new Error(`Record with key "${key}" and scope "${scope}" not found. Possibly removed from the cache`);
+                    return false;
                 }
 
                 if (!this.#_storage.locked.has(record)) {
-                    throw new Error(`Record with key "${key}" and scope "${scope}" has not been acquired by this session.`);
+                    throw new SessionError('SESSION_RECORD_NOT_ACQUIRED', {
+                        message: `Record with key "${key}" and scope "${scope}" has not been acquired by this session.`,
+                        cause: 'Attempting to remove a record that has not been acquired by this session'
+                    })
                 }
 
                 const isRemoved = await this.#_cacheController.remove(key, scope, this);

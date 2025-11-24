@@ -9,6 +9,7 @@ export type {
 
 export type { SessionPolicyOptions } from "./core/sessions/docs";
 
+export { CachifyError } from "./utils/CachifyError/CachifyError";
 export { CachifyClient } from "./client";
 export { Cachify } from "./cachify";
 export default cachify;

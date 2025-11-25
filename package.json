@@ -1,6 +1,6 @@
 {
   "name": "@nasriya/cachify",
-  "version": "0.1.1-beta",
+  "version": "0.1.2-beta",
   "description": "A lightweight, extensible in-memory caching library for storing anything, with built-in TTL and customizable cache types.",
   "keywords": [
     "cache",

@@ -1,9 +1,9 @@
 import cachify from "..";
 import overwatch from "@nasriya/overwatch";
+import SessionError from "../../src/core/sessions/errors/SessionError";
 import { cleanup } from '../helpers/helpers';
 import { SessionRecordMeta } from "../../src/core/sessions/docs";
-import SessionError from "../../src/core/sessions/errors/SessionError";
-import { SessionErrorCode } from "../../src/core/sessions/errors/error_codes";
+import type { SessionErrorCode } from "../../src/core/sessions/errors/error_codes";
 
 type Profile<T extends SessionRecordMeta> = {
     username: T["key"];
@@ -45,8 +45,8 @@ describe("LockSession concurrency", () => {
     // 1. Read blocking
     // -------------------------------------------------------------------------
     it("blocks read via another session until record is released", async () => {
-        const s1 = cachify.kvs.createLockSession();
-        const s2 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s1 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s2 = cachify.kvs.createLockSession({ timeout: 1000 });
 
         await s1.acquire([ahmad]);
 
@@ -77,7 +77,7 @@ describe("LockSession concurrency", () => {
     // 2. Read blocking via cache manager (not via session)
     // -------------------------------------------------------------------------
     it("blocks read via cache manager when record is locked", async () => {
-        const s1 = cachify.kvs.createLockSession();
+        const s1 = cachify.kvs.createLockSession({ timeout: 1000 });
         await s1.acquire([suzy]);
 
         let started = false;
@@ -103,7 +103,7 @@ describe("LockSession concurrency", () => {
     // 3. Updating / removing by non-owner throws
     // -------------------------------------------------------------------------
     it("throws when a non-owner session attempts update or remove", async () => {
-        const s1 = cachify.kvs.createLockSession();
+        const s1 = cachify.kvs.createLockSession({ timeout: 2000 });
         const s2 = cachify.kvs.createLockSession({ timeout: 2000 });
 
         await s1.acquire([omar]);
@@ -129,8 +129,8 @@ describe("LockSession concurrency", () => {
     // 4. acquire() blocks other sessions until record is released
     // -------------------------------------------------------------------------
     it("blocks session2 acquire until session1 releases", async () => {
-        const s1 = cachify.kvs.createLockSession();
-        const s2 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s1 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s2 = cachify.kvs.createLockSession({ timeout: 1000 });
 
         await s1.acquire([omar]);
 
@@ -168,7 +168,7 @@ describe("LockSession concurrency", () => {
             policy: { exclusive: true }
         });
 
-        const s2 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s2 = cachify.kvs.createLockSession({ timeout: 1000 });
 
         await s1.acquire([ahmad]); // exclusive lock
 
@@ -190,7 +190,7 @@ describe("LockSession concurrency", () => {
             policy: { exclusive: true }
         });
 
-        const s2 = cachify.kvs.createLockSession({ timeout: 2000 });
+        const s2 = cachify.kvs.createLockSession({ timeout: 1000 });
 
         await s1.acquire([suzy]);
 
@@ -218,7 +218,7 @@ describe("LockSession concurrency", () => {
     // -------------------------------------------------------------------------
     it("allows sessions with timeout=0 to wait indefinitely", async () => {
         const s1 = cachify.kvs.createLockSession({ timeout: 0 }); // never timeout
-        const s2 = cachify.kvs.createLockSession();
+        const s2 = cachify.kvs.createLockSession({ timeout: 1000 });
 
         await s1.acquire([omar]);
 

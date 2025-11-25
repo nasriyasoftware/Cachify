@@ -37,13 +37,14 @@ export class Cachify extends CachifyClient {
     }
 
     /**
-     * Creates a new instance of the CachifyClient class.
+     * Creates a new instance of the CachifyClient class, optionally with the provided ID.
      * 
+     * @param {string} id - The ID of the cache system to create. If not provided, a new ID will be generated.
      * @returns {CachifyClient} A new instance of the CachifyClient class.
      * @since v1.0.0
-    */
-    static createClient(): CachifyClient {
-        return new CachifyClient();
+     */
+    static createClient(id?: string): CachifyClient {
+        return new CachifyClient(id);
     }
 }
 

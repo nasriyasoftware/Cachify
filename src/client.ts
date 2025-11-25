@@ -1,3 +1,4 @@
+import atomix from "@nasriya/atomix";
 import ExtEngines from "./api/engines/ext.engines";
 import ExtPersistenceManager from "./api/persistence/ext.persistence.manager";
 import Engines from "./core/engines/Engines"
@@ -7,8 +8,10 @@ import FilesCacheManager from "./core/flavors/files/files.manager";
 import KVsCacheManager from "./core/flavors/kvs/kvs.manager";
 import PersistenceManager from "./core/persistence/persistence.manager";
 import PersistenceProxy from "./core/persistence/proxy";
+import uuidX from "@nasriya/uuidx";
 
 export class CachifyClient {
+    #_id: string;
     readonly #_engines = new Engines();
     readonly #_enginesProxy = new EnginesProxy(this.#_engines);
     readonly #_persistence = new PersistenceManager(this);
@@ -27,6 +30,51 @@ export class CachifyClient {
             eventsManager: this.#_events.for.files
         })
     }
+
+    /**
+     * Constructs a new instance of the CachifyClient class.
+     * @param {string} [id] - The ID of the cache system to create.
+     * If no ID is provided, a new one will be generated.
+     * Throws an error if a cache system with the same ID already exists.
+     */
+    constructor(id?: string) {
+        if (id === undefined) {
+            let id: string = `Cachify:main`;
+            while (CachifyClient.#_ids.has(id)) {
+                id = `Cachify:${uuidX.v4()}`;
+            }
+
+            CachifyClient.#_ids.add(id);
+            this.#_id = id;
+        } else {
+            try {
+                if (!atomix.valueIs.string(id)) { throw new Error(`Expected a string, but instead got ${typeof id}`) }
+                if (id.trim().length === 0) { throw new RangeError(`The client ID must not be an empty string`) }
+                if (CachifyClient.#_ids.has(id)) { throw new Error(`Cache system with ID "${id}" already exists!`); }
+            } catch (error) {
+                if (error instanceof Error) { error.message = `Failed to create cache system: ${error.message}`; }
+                throw error;
+            }
+
+            CachifyClient.#_ids.add(id);
+            this.#_id = id.trim();
+        }
+    }
+
+    /**
+     * The IDs of the created cache systems.
+     * @since v1.0.0
+     */
+    static readonly #_ids: Set<string> = new Set();
+
+    /**
+     * Retrieves the ID of the cache system.
+     *
+     * The ID is a unique string used to identify the cache system.
+     * @returns {string} The ID of the cache system.
+     * @since v1.0.0
+     */
+    get id(): string { return this.#_id }
 
     /**
      * Access the engines manager.
@@ -62,7 +110,7 @@ export class CachifyClient {
     get files(): FilesCacheManager { return this.#_flavors.files }
 
     /**
-     * 
+     * Access the persistence manager.
      * @since v1.0.0
      */
     readonly persistence = new ExtPersistenceManager(this.#_persistence, this);

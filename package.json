@@ -36,7 +36,7 @@
     "build": "npm run build:esm && npm run build:cjs && postbuild",
     "build:esm": "tsc --project tsconfig.esm.json",
     "build:cjs": "tsc --project tsconfig.cjs.json",
-    "test": "jest --detectOpenHandles",
+    "test": "jest --detectOpenHandles --runInBand",
     "upgrade": "ncu -u --dep dev,peer",
     "benchmark": "bun run benchmarks"
   },

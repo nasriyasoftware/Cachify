@@ -48,5 +48,5 @@ export class Cachify extends CachifyClient {
     }
 }
 
-const cachify = new Cachify();
+const cachify = new Cachify('Cachify:global');
 export default cachify;

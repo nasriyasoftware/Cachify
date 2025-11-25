@@ -67,7 +67,7 @@ class ExtPersistenceManager {
      * Schedules a persistence operation for the specified cache flavor and storage service.
      *
      * This function is a no-op until the persistence manager is fully implemented.
-     *
+     * TODO: implement scheduling
      */
     schedule() {
 

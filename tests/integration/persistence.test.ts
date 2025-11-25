@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs';
 
 describe('Persistence Integration (Global cachify)', () => {
-    const backupPath = path.join(configs.testDir, 'backups');
+    const backupPath = path.join(configs.testDir);
     const testFile = path.join(configs.testDir, 'update.txt');
     const localBackupName = 'local-backup-test';
     const s3BackupName = 's3-backup-test';

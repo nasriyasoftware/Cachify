@@ -3,6 +3,7 @@ import path from "path";
 import PersistanceService from "../../../core/persistence/PersistanceService";
 import PersistenceManager from "../../../core/persistence/persistence.manager";
 import type { BackupInternalParameters, PersistanceStorageServices } from "../../../core/persistence/docs";
+import atomix from "@nasriya/atomix";
 
 type BackupFunction = PersistanceStorageServices['local']['api']['private']['backup'];
 type RestoreFunction = PersistanceStorageServices['local']['api']['private']['restore'];
@@ -19,9 +20,19 @@ type Configs = PersistanceStorageServices['local']['configs'];
  * @returns The absolute path to the backup file
  * @throws If `fileName` is not a valid backup file name
  */
-function getFilePath(fileName: string, configs: Configs) {
+function getFilePath(fileName: string, configs: Configs & { folder?: string }): string {
     assertValidBackupFileName(fileName);
-    return path.resolve((configs.path || process.cwd()), 'cachify', 'backups', fileName);
+    const basePath = (() => {
+        if (configs.path) {
+            return path.resolve(configs.path, 'backups');
+        } else {
+            return path.resolve(process.cwd(), 'cachify', 'backups');
+        }
+    })();
+
+    const folderName = configs.folder ? atomix.dataTypes.string.slugify(configs.folder) : undefined;
+    const dirPath = folderName ? path.join(basePath, folderName) : basePath;
+    return path.join(dirPath, fileName);
 }
 
 /**
@@ -62,10 +73,16 @@ function assertValidBackupFileName(name: string): void {
 
 class LocalStorageDriver extends PersistanceService<'local'> {
     readonly #_manager: PersistenceManager;
-    
+    readonly #_clientId: string | undefined;
+
     constructor(persistenceManager: PersistenceManager, configs: Configs) {
         super('local', configs);
         this.#_manager = persistenceManager;
+
+        const clientId = this.#_manager.cachifyId;
+        if (clientId) {
+            this.#_clientId = clientId;
+        }
     }
 
     /**
@@ -82,7 +99,8 @@ class LocalStorageDriver extends PersistanceService<'local'> {
             const baseName = path.basename(fileNameRaw, ext); // filename without extension
             const backupName = `${flavor}-${baseName}.backup`;
 
-            const fileName = getFilePath(backupName, this.configs);
+            const fileName = getFilePath(backupName, { ...this.configs, folder: this.#_clientId });
+
             const destDir = path.dirname(fileName);
             fs.mkdirSync(destDir, { recursive: true });
 
@@ -108,7 +126,8 @@ class LocalStorageDriver extends PersistanceService<'local'> {
             const ext = path.extname(fileNameRaw);
             const baseName = path.basename(fileNameRaw, ext); // filename without extension
             const backupName = `${flavor}-${baseName}.backup`;
-            const finalPath = getFilePath(backupName, this.configs);
+
+            const finalPath = getFilePath(backupName, { ...this.configs, folder: this.#_clientId });
 
             const exist = fs.existsSync(finalPath);
             if (!exist) { return }

@@ -8,10 +8,9 @@ import FilesCacheManager from "./core/flavors/files/files.manager";
 import KVsCacheManager from "./core/flavors/kvs/kvs.manager";
 import PersistenceManager from "./core/persistence/persistence.manager";
 import PersistenceProxy from "./core/persistence/proxy";
-import uuidX from "@nasriya/uuidx";
 
 export class CachifyClient {
-    #_id: string;
+    #_id: string | undefined;
     readonly #_engines = new Engines();
     readonly #_enginesProxy = new EnginesProxy(this.#_engines);
     readonly #_persistence = new PersistenceManager(this);
@@ -32,21 +31,14 @@ export class CachifyClient {
     }
 
     /**
-     * Constructs a new instance of the CachifyClient class.
-     * @param {string} [id] - The ID of the cache system to create.
-     * If no ID is provided, a new one will be generated.
-     * Throws an error if a cache system with the same ID already exists.
+     * Creates a new instance of the CachifyClient class, optionally with the provided ID.
+     *
+     * @param {string} id - The ID of the cache system to create. If not provided, a new ID will be generated.
+     * @throws {Error} If the specified client ID is empty, already exists, or is not a string.
+     * @since v1.0.0
      */
     constructor(id?: string) {
-        if (id === undefined) {
-            let id: string = `Cachify:main`;
-            while (CachifyClient.#_ids.has(id)) {
-                id = `Cachify:${uuidX.v4()}`;
-            }
-
-            CachifyClient.#_ids.add(id);
-            this.#_id = id;
-        } else {
+        if (id !== undefined) {
             try {
                 if (!atomix.valueIs.string(id)) { throw new Error(`Expected a string, but instead got ${typeof id}`) }
                 if (id.trim().length === 0) { throw new RangeError(`The client ID must not be an empty string`) }
@@ -68,13 +60,10 @@ export class CachifyClient {
     static readonly #_ids: Set<string> = new Set();
 
     /**
-     * Retrieves the ID of the cache system.
-     *
-     * The ID is a unique string used to identify the cache system.
-     * @returns {string} The ID of the cache system.
+     * Retrieves the unique identifier for the cache system.
      * @since v1.0.0
      */
-    get id(): string { return this.#_id }
+    get id(): string | undefined { return this.#_id }
 
     /**
      * Access the engines manager.

@@ -49,6 +49,14 @@ class PersistenceManager {
     }
 
     /**
+     * Retrieves the unique identifier for the current caching client instance.
+     *
+     * @returns The caching client instance's unique identifier.
+     * @since v1.0.0
+     */
+    get cachifyId() { return this.#_client.id }
+
+    /**
      * Retrieves the map of all registered persistence services, keyed by service type.
      *
      * @returns A map of maps, where each key is a service type (e.g. "local" or "s3"),

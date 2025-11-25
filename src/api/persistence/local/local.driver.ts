@@ -110,7 +110,6 @@ class LocalStorageDriver extends PersistanceService<'local'> {
             if (error instanceof Error) { error.message = `Failed to backup to "${fileNameRaw}": ${error.message}`; }
             throw error;
         }
-
     }
 
     /**
